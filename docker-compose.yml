@@ -1,0 +1,83 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: microservices-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: auth_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+
+  postgres-pedidos:
+    image: postgres:16-alpine
+    container_name: microservices-postgres-pedidos
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pedidos_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - pedidos_postgres_data:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+
+  postgres-fleet:
+    image: postgres:16-alpine
+    container_name: microservices-postgres-fleet
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: fleet_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - fleet_postgres_data:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+
+  postgres-inventory:
+    image: postgres:16-alpine
+    container_name: microservices-postgres-inventory
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: inventory_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - inventory_postgres_data:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: microservices-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - microservices-network
+
+volumes:
+  postgres_data:
+  pedidos_postgres_data:
+  fleet_postgres_data:
+  inventory_postgres_data:
+  rabbitmq_data:
+
+networks:
+  microservices-network:
+    driver: bridge
