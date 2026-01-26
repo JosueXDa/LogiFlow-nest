@@ -18,7 +18,7 @@ async function bootstrap() {
     exposedHeaders: ['Set-Cookie'],
   });
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3009);
   console.log(`API Gateway is running on: ${await app.getUrl()}`);
 }
 void bootstrap();

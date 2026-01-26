@@ -6,7 +6,7 @@ import { InventoryService } from './inventory.service';
 export class InventoryEventsController {
   private readonly logger = new Logger(InventoryEventsController.name);
 
-  constructor(private readonly inventoryService: InventoryService) {}
+  constructor(private readonly inventoryService: InventoryService) { }
 
   /**
    * Handler: Pedido Cancelado
@@ -101,5 +101,27 @@ export class InventoryEventsController {
         error.stack,
       );
     }
+  }
+
+  /**
+   * Handler: Conductor Asignado (Opcional)
+   * Podría usarse para marcar el pedido como "en proceso de entrega"
+   */
+  @EventPattern('conductor.asignado')
+  async handleConductorAsignado(
+    @Payload()
+    data: {
+      pedidoId: string;
+      conductorId: string;
+      tiempoEstimadoLlegada: number;
+    },
+  ) {
+    this.logger.log(
+      `📥 Evento recibido: conductor.asignado - Pedido: ${data.pedidoId}, Conductor: ${data.conductorId}`,
+    );
+    this.logger.debug(
+      `⏱️ Tiempo estimado de llegada: ${data.tiempoEstimadoLlegada} minutos`,
+    );
+    // Lógica opcional: actualizar estado de reservas o registrar información
   }
 }

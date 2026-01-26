@@ -11,7 +11,7 @@ import {
 import { FlotaService } from './flota.service';
 import { FlotaController } from './flota.controller';
 import { FlotaEventsController } from './flota-events.controller';
-import { FLOTA_EVENT_CLIENT } from './flota.constants';
+import { FLOTA_EVENT_CLIENT, INVENTORY_CLIENT } from './flota.constants';
 
 @Module({
   imports: [
@@ -28,9 +28,23 @@ import { FLOTA_EVENT_CLIENT } from './flota.constants';
         name: FLOTA_EVENT_CLIENT,
         transport: Transport.RMQ,
         options: {
-          urls: [process.env.RABBITMQ_URL ?? 'amqp://localhost:5672'],
-          exchange: 'events',
-          exchangeType: 'topic',
+          urls: [
+            process.env.RABBITMQ_URL ?? 'amqp://admin:admin@localhost:5672',
+          ],
+          queue: 'fleet_events',
+          queueOptions: {
+            durable: true,
+          },
+        },
+      },
+      {
+        name: INVENTORY_CLIENT,
+        transport: Transport.RMQ,
+        options: {
+          urls: [
+            process.env.RABBITMQ_URL ?? 'amqp://admin:admin@localhost:5672',
+          ],
+          queue: 'inventory_queue',
           queueOptions: {
             durable: true,
           },
@@ -45,4 +59,4 @@ import { FLOTA_EVENT_CLIENT } from './flota.constants';
   providers: [FlotaService],
   exports: [FlotaService],
 })
-export class FlotaModule {}
+export class FlotaModule { }

@@ -4,6 +4,7 @@
 
 // Cliente de eventos RabbitMQ
 export const FLOTA_EVENT_CLIENT = 'FLOTA_EVENT_CLIENT';
+export const INVENTORY_CLIENT = 'INVENTORY_CLIENT';
 
 // Radio de búsqueda para conductores cercanos (en km)
 export const RADIO_BUSQUEDA_KM = 5;

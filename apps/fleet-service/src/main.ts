@@ -17,22 +17,18 @@ async function bootstrap() {
   });
   console.log('🔌 TCP Microservice listening on port 4005');
 
-  // RabbitMQ para escuchar eventos (exchange)
+  // RabbitMQ para eventos
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
     options: {
       urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672'],
-      exchange: 'events',
-      exchangeType: 'topic',
-      queue: 'fleet_events_listener',
+      queue: 'fleet_queue',
       queueOptions: {
         durable: true,
       },
     },
   });
-  console.log(
-    '🐰 RabbitMQ connected - Exchange: events (topic), Queue: fleet_events_listener',
-  );
+  console.log('🐰 RabbitMQ connected - Queue: fleet_queue');
 
   // Habilitar validación global de DTOs
   app.useGlobalPipes(
