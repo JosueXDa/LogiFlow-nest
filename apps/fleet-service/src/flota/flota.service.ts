@@ -26,6 +26,12 @@ import {
   RADIO_BUSQUEDA_KM,
   TIEMPO_MINUTOS_POR_KM,
 } from './flota.constants';
+import {
+  ConductorRegistradoEvent,
+  ConductorAsignadoEvent,
+  AsignacionFallidaEvent,
+  ConductorLiberadoEvent,
+} from './events';
 
 @Injectable()
 export class FlotaService {
@@ -37,7 +43,7 @@ export class FlotaService {
     @Inject(FLOTA_EVENT_CLIENT)
     private readonly eventClient: ClientProxy,
     private readonly dataSource: DataSource,
-  ) {}
+  ) { }
 
   /**
    * Registra un nuevo conductor con su vehículo en el sistema
@@ -85,12 +91,14 @@ export class FlotaService {
     const savedConductor = await this.conductorRepository.save(conductor);
 
     // Emitir evento de auditoría
-    this.eventClient.emit('conductor.registrado', {
+    const evento: ConductorRegistradoEvent = {
       conductorId: savedConductor.id,
       nombre: savedConductor.nombre,
       tipoVehiculo: vehiculo.tipo,
       placa: vehiculo.placa,
-    });
+      fecha: new Date(),
+    };
+    this.eventClient.emit('conductor.registrado', evento);
 
     return savedConductor;
   }
@@ -200,10 +208,12 @@ export class FlotaService {
 
       if (conductoresDisponibles.length === 0) {
         // No hay conductores disponibles
-        this.eventClient.emit('asignacion.fallida', {
+        const evento: AsignacionFallidaEvent = {
           pedidoId,
           razon: `No hay conductores disponibles con vehículo tipo ${tipoVehiculo}`,
-        });
+          fecha: new Date(),
+        };
+        this.eventClient.emit('asignacion.fallida', evento);
         return;
       }
 
@@ -213,10 +223,12 @@ export class FlotaService {
       );
 
       if (conductoresAptos.length === 0) {
-        this.eventClient.emit('asignacion.fallida', {
+        const evento: AsignacionFallidaEvent = {
           pedidoId,
           razon: `No hay conductores con capacidad suficiente para ${pesoKg}kg`,
-        });
+          fecha: new Date(),
+        };
+        this.eventClient.emit('asignacion.fallida', evento);
         return;
       }
 
@@ -234,10 +246,12 @@ export class FlotaService {
       );
 
       if (conductoresCercanos.length === 0) {
-        this.eventClient.emit('asignacion.fallida', {
+        const evento: AsignacionFallidaEvent = {
           pedidoId,
           razon: `No hay conductores en un radio de ${RADIO_BUSQUEDA_KM}km`,
-        });
+          fecha: new Date(),
+        };
+        this.eventClient.emit('asignacion.fallida', evento);
         return;
       }
 
@@ -254,7 +268,7 @@ export class FlotaService {
       );
 
       // Emitir evento de conductor asignado
-      this.eventClient.emit('conductor.asignado', {
+      const evento: ConductorAsignadoEvent = {
         pedidoId,
         conductorId: conductorSeleccionado.conductor.id,
         nombreConductor: conductorSeleccionado.conductor.nombre,
@@ -264,7 +278,8 @@ export class FlotaService {
           lng: Number(conductorSeleccionado.conductor.longitud),
         },
         tiempoEstimadoLlegada: tiempoMinutos,
-      });
+      };
+      this.eventClient.emit('conductor.asignado', evento);
     });
   }
 
@@ -278,9 +293,11 @@ export class FlotaService {
       conductor.estado = EstadoConductor.DISPONIBLE;
       await this.conductorRepository.save(conductor);
 
-      this.eventClient.emit('conductor.liberado', {
+      const evento: ConductorLiberadoEvent = {
         conductorId: conductor.id,
-      });
+        fecha: new Date(),
+      };
+      this.eventClient.emit('conductor.liberado', evento);
     }
   }
 }

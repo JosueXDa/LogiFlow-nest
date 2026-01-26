@@ -4,7 +4,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { Pedido, ItemPedido } from './entities';
 import { PedidosController } from './pedidos.controller';
 import { PedidosEventsController } from './pedidos-events.controller';
-import { PEDIDOS_EVENT_CLIENT, INVENTORY_CLIENT } from './pedidos.constants';
+import { PEDIDOS_EVENT_CLIENT, INVENTORY_CLIENT, FLEET_CLIENT } from './pedidos.constants';
 import { PedidosService } from './service/impl/pedidos.service';
 import { PEDIDOS_SERVICE } from './service/pedidos-service.interface';
 import { PedidosRepository } from './repository/pedidos.repository';
@@ -39,6 +39,19 @@ import { PedidosRepository } from './repository/pedidos.repository';
           },
         },
       },
+      {
+        name: FLEET_CLIENT,
+        transport: Transport.RMQ,
+        options: {
+          urls: [
+            process.env.RABBITMQ_URL ?? 'amqp://admin:admin@localhost:5672',
+          ],
+          queue: 'fleet_queue',
+          queueOptions: {
+            durable: true,
+          },
+        },
+      },
     ]),
   ],
   controllers: [PedidosController, PedidosEventsController],
@@ -51,4 +64,4 @@ import { PedidosRepository } from './repository/pedidos.repository';
   ],
   exports: [PEDIDOS_SERVICE],
 })
-export class PedidosModule {}
+export class PedidosModule { }
