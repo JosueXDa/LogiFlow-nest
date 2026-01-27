@@ -25,17 +25,17 @@ docker compose up -d
 3) Iniciar todos los servicios en modo desarrollo:
 
 ```sh
-pnpm dev
+pnpm start:dev
 ```
 
 ### Iniciar un servicio específico
 
 ```sh
-pnpm dev -- --filter=api-gateway
-pnpm dev -- --filter=auth-services
-pnpm dev -- --filter=fleet-service
-pnpm dev -- --filter=inventory-service
-pnpm dev -- --filter=pedidos-service
+pnpm start:dev -- --filter=api-gateway
+pnpm start:dev -- --filter=auth-services
+pnpm start:dev -- --filter=fleet-service
+pnpm start:dev -- --filter=inventory-service
+pnpm start:dev -- --filter=pedidos-service
 ```
 
 ### Otros comandos útiles
