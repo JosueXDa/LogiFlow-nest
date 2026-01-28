@@ -1,37 +1,33 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ClientsModule, Transport } from '@nestjs/microservices';
+import { getTypeOrmConfig } from './config/typeorm.config';
+import { RepartidorModule } from './repartidor/repartidor.module';
+import { VehiculoModule } from './vehiculo/vehiculo.module';
+import { AsignacionModule } from './asignacion/asignacion.module';
+import { DisponibilidadModule } from './disponibilidad/disponibilidad.module';
+import { EventsModule } from './events/events.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { FlotaModule } from './flota/flota.module';
-import { TypeOrmConfigService } from './config/typeorm.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env',
     }),
     TypeOrmModule.forRootAsync({
-      useClass: TypeOrmConfigService,
+      imports: [ConfigModule],
+      useFactory: getTypeOrmConfig,
+      inject: [ConfigService],
     }),
-    // Configurar cliente RabbitMQ global para consumir eventos
-    ClientsModule.register([
-      {
-        name: 'RABBITMQ_SERVICE',
-        transport: Transport.RMQ,
-        options: {
-          urls: [process.env.RABBITMQ_URL ?? 'amqp://localhost:5672'],
-          queue: process.env.RABBITMQ_PEDIDOS_QUEUE ?? 'pedidos_events',
-          queueOptions: {
-            durable: true,
-          },
-        },
-      },
-    ]),
-    FlotaModule,
+    RepartidorModule,
+    VehiculoModule,
+    AsignacionModule,
+    DisponibilidadModule,
+    EventsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, TypeOrmConfigService],
+  providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

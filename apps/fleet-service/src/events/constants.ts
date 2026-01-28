@@ -1,0 +1,1 @@
+export const FLEET_EVENT_CLIENT = 'FLEET_EVENT_CLIENT';
