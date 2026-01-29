@@ -29,6 +29,19 @@ async function bootstrap() {
   });
   logger.log('🐰 RabbitMQ connected - Queue: pedidos_queue');
 
+  // RabbitMQ para escuchar eventos de Fleet
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672'],
+      queue: 'fleet_events',
+      queueOptions: {
+        durable: true,
+      },
+    },
+  });
+  logger.log('🐰 RabbitMQ connected - Queue: fleet_events');
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

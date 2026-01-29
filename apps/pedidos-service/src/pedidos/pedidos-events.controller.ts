@@ -8,9 +8,9 @@ export class PedidosEventsController {
   constructor(
     @Inject(PEDIDOS_SERVICE)
     private readonly pedidosService: IPedidosService,
-  ) {}
+  ) { }
 
-  @EventPattern('conductor.asignado')
+  @EventPattern('fleet.asignacion.created')
   async onConductorAsignado(
     @Payload()
     payload: {
@@ -26,7 +26,7 @@ export class PedidosEventsController {
     });
   }
 
-  @EventPattern('asignacion.fallida')
+  @EventPattern('fleet.asignacion.failed')
   async onAsignacionFallida(
     @Payload()
     payload: {

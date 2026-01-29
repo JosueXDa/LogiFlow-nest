@@ -5,8 +5,11 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { MICROSERVICES_CLIENTS } from './constans';
 import { AuthController } from './auth/auth.controller';
 import { PedidosController } from './pedidos/pedidos.controller';
-import { FlotaController } from './flota/flota.controller';
 import { InventoryController } from './inventory/inventory.controller';
+import { RepartidorController } from './flota/repartidor.controller';
+import { VehiculoController } from './flota/vehiculo.controller';
+import { AsignacionController } from './flota/asignacion.controller';
+import { DisponibilidadController } from './flota/disponibilidad.controller';
 
 @Module({
   imports: [
@@ -38,8 +41,11 @@ import { InventoryController } from './inventory/inventory.controller';
     AppController,
     AuthController,
     PedidosController,
-    FlotaController,
     InventoryController,
+    RepartidorController,
+    VehiculoController,
+    AsignacionController,
+    DisponibilidadController,
   ],
   providers: [AppService],
 })

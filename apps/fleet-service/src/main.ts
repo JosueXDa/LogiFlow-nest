@@ -20,7 +20,7 @@ async function bootstrap() {
     transport: Transport.RMQ,
     options: {
       urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672'],
-      queue: 'fleet_events_listener',
+      queue: 'fleet_queue',
       queueOptions: {
         durable: true,
       },

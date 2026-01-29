@@ -31,14 +31,15 @@ export class PedidosController {
   @Get(':id')
   @UseGuards(AuthGuard)
   async getPedido(@Param('id') id: string) {
-    return firstValueFrom(
-      this.pedidosServiceClient.send('get_pedido', id),
-    );
+    return firstValueFrom(this.pedidosServiceClient.send('get_pedido', id));
   }
 
   @Patch(':id/cancelar')
   @UseGuards(AuthGuard)
-  async cancelarPedido(@Param('id') id: string, @Body() cancelPedidoDto: any): Promise<unknown> {
+  async cancelarPedido(
+    @Param('id') id: string,
+    @Body() cancelPedidoDto: any,
+  ): Promise<unknown> {
     return firstValueFrom(
       this.pedidosServiceClient.send('cancel_pedido', {
         id,
