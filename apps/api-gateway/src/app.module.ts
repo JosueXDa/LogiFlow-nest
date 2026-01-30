@@ -10,6 +10,7 @@ import { RepartidorController } from './flota/repartidor.controller';
 import { VehiculoController } from './flota/vehiculo.controller';
 import { AsignacionController } from './flota/asignacion.controller';
 import { DisponibilidadController } from './flota/disponibilidad.controller';
+import { BillingController } from './billing/billing.controller';
 
 @Module({
   imports: [
@@ -35,6 +36,13 @@ import { DisponibilidadController } from './flota/disponibilidad.controller';
           port: 4006,
         },
       },
+      {
+        name: MICROSERVICES_CLIENTS.BILLING_SERVICE,
+        transport: Transport.TCP,
+        options: {
+          port: 4007,
+        },
+      },
     ]),
   ],
   controllers: [
@@ -46,7 +54,8 @@ import { DisponibilidadController } from './flota/disponibilidad.controller';
     VehiculoController,
     AsignacionController,
     DisponibilidadController,
+    BillingController,
   ],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

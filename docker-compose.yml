@@ -57,6 +57,20 @@ services:
     networks:
       - microservices-network
 
+  postgres-billing:
+    image: postgres:16-alpine
+    container_name: microservices-postgres-billing
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: billing_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - billing_postgres_data:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: microservices-rabbitmq
@@ -76,7 +90,9 @@ volumes:
   pedidos_postgres_data:
   fleet_postgres_data:
   inventory_postgres_data:
+  billing_postgres_data:
   rabbitmq_data:
+
 
 networks:
   microservices-network:
