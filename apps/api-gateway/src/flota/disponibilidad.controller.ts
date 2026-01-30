@@ -16,7 +16,7 @@ export class DisponibilidadController {
   constructor(
     @Inject(MICROSERVICES_CLIENTS.FLEET_SERVICE)
     private readonly fleetServiceClient: ClientProxy,
-  ) {}
+  ) { }
 
   @Get('zona/:zonaId')
   @UseGuards(AuthGuard)

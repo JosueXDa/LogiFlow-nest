@@ -26,6 +26,9 @@ export class User {
   @Column({ type: 'varchar', length: 500, nullable: true })
   image?: string;
 
+  @Column({ type: 'text', nullable: true })
+  role?: UserRole;
+
   @CreateDateColumn()
   createdAt: Date;
 
@@ -38,3 +41,11 @@ export class User {
   @OneToMany(() => Account, (account) => account.user)
   accounts: Account[];
 }
+
+export enum UserRole {
+  CLIENTE = 'CLIENTE',
+  REPARTIDOR = 'REPARTIDOR',
+  SUPERVISOR = 'SUPERVISOR',
+  GERENTE = 'GERENTE',
+}
+
