@@ -5,8 +5,13 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { MICROSERVICES_CLIENTS } from './constans';
 import { AuthController } from './auth/auth.controller';
 import { PedidosController } from './pedidos/pedidos.controller';
-import { FlotaController } from './flota/flota.controller';
 import { InventoryController } from './inventory/inventory.controller';
+import { RepartidorController } from './flota/repartidor.controller';
+import { VehiculoController } from './flota/vehiculo.controller';
+import { AsignacionController } from './flota/asignacion.controller';
+import { DisponibilidadController } from './flota/disponibilidad.controller';
+import { BillingController } from './billing/billing.controller';
+import { ZonaController } from './flota/zona.controller';
 
 @Module({
   imports: [
@@ -32,15 +37,27 @@ import { InventoryController } from './inventory/inventory.controller';
           port: 4006,
         },
       },
+      {
+        name: MICROSERVICES_CLIENTS.BILLING_SERVICE,
+        transport: Transport.TCP,
+        options: {
+          port: 4007,
+        },
+      },
     ]),
   ],
   controllers: [
     AppController,
     AuthController,
     PedidosController,
-    FlotaController,
     InventoryController,
+    RepartidorController,
+    VehiculoController,
+    AsignacionController,
+    DisponibilidadController,
+    BillingController,
+    ZonaController,
   ],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

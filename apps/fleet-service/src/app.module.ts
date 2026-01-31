@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { getTypeOrmConfig } from './config/typeorm.config';
-import { RepartidorModule } from './repartidor/repartidor.module';
-import { VehiculoModule } from './vehiculo/vehiculo.module';
-import { AsignacionModule } from './asignacion/asignacion.module';
-import { DisponibilidadModule } from './disponibilidad/disponibilidad.module';
-import { EventsModule } from './events/events.module';
+import { TypeOrmConfigService } from './config/typeorm.config';
+import { RepartidorModule } from './modules/repartidor/repartidor.module';
+import { VehiculoModule } from './modules/vehiculo/vehiculo.module';
+import { AsignacionModule } from './modules/asignacion/asignacion.module';
+import { DisponibilidadModule } from './modules/disponibilidad/disponibilidad.module';
+import { EventsModule } from './modules/events/events.module';
+import { ZonaModule } from './modules/zona/zona.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -18,14 +19,14 @@ import { AppService } from './app.service';
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: getTypeOrmConfig,
-      inject: [ConfigService],
+      useClass: TypeOrmConfigService,
     }),
     RepartidorModule,
     VehiculoModule,
     AsignacionModule,
     DisponibilidadModule,
     EventsModule,
+    ZonaModule,
   ],
   controllers: [AppController],
   providers: [AppService],

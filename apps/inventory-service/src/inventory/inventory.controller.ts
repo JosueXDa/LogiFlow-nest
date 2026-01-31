@@ -7,7 +7,6 @@ import {
   ReserveStockDto,
   UpdateStockDto,
 } from './dto';
-
 @Controller()
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}

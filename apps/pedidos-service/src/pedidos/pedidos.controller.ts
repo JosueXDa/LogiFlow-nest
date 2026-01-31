@@ -11,7 +11,7 @@ export class PedidosController {
   constructor(
     @Inject(PEDIDOS_SERVICE)
     private readonly pedidosService: IPedidosService,
-  ) {}
+  ) { }
 
   @MessagePattern('create_pedido')
   create(@Payload() dto: CreatePedidoDto) {
@@ -43,5 +43,10 @@ export class PedidosController {
     },
   ) {
     return this.pedidosService.updateEstado(payload.id, payload.dto);
+  }
+
+  @MessagePattern('confirm_pedido')
+  async confirmar(@Payload() id: string) {
+    return this.pedidosService.confirmPedido(id);
   }
 }

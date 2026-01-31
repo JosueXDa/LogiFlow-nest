@@ -31,6 +31,7 @@ export const auth = betterAuth({
     updateAge: 60 * 60 * 24, // 1 día
   },
   trustedOrigins: [
+    'http://localhost:3009',
     'http://localhost:3000',
     'http://localhost:3001',
     'http://localhost:4000',
@@ -40,6 +41,13 @@ export const auth = betterAuth({
   advanced: {
     // En desarrollo, deshabilitar la verificación CSRF estricta
     disableCSRFCheck: process.env.NODE_ENV === 'development',
+  },
+  user: {
+    additionalFields: {
+      role: {
+        type: 'string',
+      },
+    },
   },
   baseURL: process.env.AUTH_SERVICE_URL || 'http://localhost:3001',
 });

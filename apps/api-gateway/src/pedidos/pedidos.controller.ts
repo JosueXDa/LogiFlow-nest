@@ -18,7 +18,7 @@ export class PedidosController {
   constructor(
     @Inject(MICROSERVICES_CLIENTS.PEDIDOS_SERVICE)
     private pedidosServiceClient: ClientProxy,
-  ) {}
+  ) { }
 
   @Post()
   @UseGuards(AuthGuard)
@@ -31,14 +31,15 @@ export class PedidosController {
   @Get(':id')
   @UseGuards(AuthGuard)
   async getPedido(@Param('id') id: string) {
-    return firstValueFrom(
-      this.pedidosServiceClient.send('get_pedido', id),
-    );
+    return firstValueFrom(this.pedidosServiceClient.send('get_pedido', id));
   }
 
   @Patch(':id/cancelar')
   @UseGuards(AuthGuard)
-  async cancelarPedido(@Param('id') id: string, @Body() cancelPedidoDto: any): Promise<unknown> {
+  async cancelarPedido(
+    @Param('id') id: string,
+    @Body() cancelPedidoDto: any,
+  ): Promise<unknown> {
     return firstValueFrom(
       this.pedidosServiceClient.send('cancel_pedido', {
         id,
@@ -58,6 +59,14 @@ export class PedidosController {
         id,
         dto: updateEstadoDto,
       }),
+    );
+  }
+
+  @Post(':id/confirmar')
+  @UseGuards(AuthGuard)
+  async confirmarPedido(@Param('id') id: string) {
+    return firstValueFrom(
+      this.pedidosServiceClient.send('confirm_pedido', id),
     );
   }
 }
