@@ -36,6 +36,8 @@ pnpm start:dev -- --filter=auth-services
 pnpm start:dev -- --filter=fleet-service
 pnpm start:dev -- --filter=inventory-service
 pnpm start:dev -- --filter=pedidos-service
+pnpm start:dev -- --filter=tracking-service
+pnpm start:dev -- --filter=billing-service
 ```
 
 ### Otros comandos útiles
