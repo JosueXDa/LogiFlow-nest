@@ -28,7 +28,7 @@ export class PedidosService implements IPedidosService {
     private readonly eventClient: ClientProxy,
     @Inject(INVENTORY_CLIENT)
     private readonly inventoryClient: ClientProxy,
-  ) {}
+  ) { }
 
   async createPedido(dto: CreatePedidoDto): Promise<Pedido> {
     this.logger.log(
@@ -313,5 +313,59 @@ export class PedidosService implements IPedidosService {
       pedidoId: pedido.id,
       razon: payload.razon,
     });
+  }
+  async handleEntregaCompletada(payload: { pedidoId: string; fecha: Date }): Promise<void> {
+    const pedido = await this.findPedidoById(payload.pedidoId);
+
+    if (pedido.estado === PedidoEstado.ENTREGADO) {
+      return;
+    }
+
+    pedido.estado = PedidoEstado.ENTREGADO;
+    pedido.evidenciaEntrega = 'Entrega confirmada automÃ¡ticamente por FleetService'; // Opcional
+    const savedPedido = await this.pedidosRepository.savePedido(pedido);
+
+    this.logger.log(`📦 Pedido ${savedPedido.id} marcado como ENTREGADO via evento fleet`);
+
+    // Emitir eventos colaterales
+    this.inventoryClient.emit('pedido.entregado', {
+      pedidoId: savedPedido.id,
+      items: savedPedido.items
+        .filter((item) => item.reservaId !== null)
+        .map((item) => ({
+          itemId: item.id,
+          productoId: item.productoId,
+          reservaId: item.reservaId,
+        })),
+      fecha: new Date(),
+    });
+
+    this.eventClient.emit('pedido.estado.actualizado', {
+      id: savedPedido.id,
+      nuevoEstado: savedPedido.estado,
+      clienteId: savedPedido.clienteId,
+    });
+  }
+
+  async confirmPedido(id: string): Promise<Pedido> {
+    const pedido = await this.findPedidoById(id);
+
+    if (pedido.estado !== PedidoEstado.PENDIENTE) {
+      throw new BadRequestException('Solo se pueden confirmar pedidos en estado PENDIENTE');
+    }
+
+    // Aquí podria ir lógica de pago
+
+    // Emitir evento para facturación
+    this.eventClient.emit('pedido.confirmado', {
+      pedidoId: pedido.id,
+      timestamp: new Date().toISOString(),
+      eventId: crypto.randomUUID(),
+      clienteId: pedido.clienteId, // Billing lo necesita
+      total: 100 // Mock total, deberia venir del pedido
+    });
+
+    this.logger.log(`✅ Pedido ${id} confirmado manualmente. Evento pedido.confirmado emitido.`);
+    return pedido;
   }
 }

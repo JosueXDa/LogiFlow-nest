@@ -41,7 +41,7 @@ export class FleetEventPublisher {
             data,
         };
 
-        this.client.emit('fleet.asignacion.created', event);
+        this.client.emit('conductor.asignado', event);
         this.logger.log(
             `Evento publicado: fleet.asignacion.created - ${data.asignacionId}`,
         );

@@ -112,15 +112,20 @@ export class InventoryEventsController {
     @Payload()
     data: {
       pedidoId: string;
-      conductorId: string;
-      tiempoEstimadoLlegada: number;
+      conductorId?: string;
+      repartidorId?: string;
+      tiempoEstimadoLlegada?: number;
+      tiempoEstimadoMin?: number;
     },
   ) {
+    const conductorId = data.conductorId || data.repartidorId;
+    const tiempo = data.tiempoEstimadoLlegada || data.tiempoEstimadoMin;
+
     this.logger.log(
-      `📥 Evento recibido: conductor.asignado - Pedido: ${data.pedidoId}, Conductor: ${data.conductorId}`,
+      `📥 Evento recibido: conductor.asignado - Pedido: ${data.pedidoId}, Conductor: ${conductorId}`,
     );
     this.logger.debug(
-      `⏱️ Tiempo estimado de llegada: ${data.tiempoEstimadoLlegada} minutos`,
+      `⏱️ Tiempo estimado de llegada: ${tiempo} minutos`,
     );
     // Lógica opcional: actualizar estado de reservas o registrar información
   }

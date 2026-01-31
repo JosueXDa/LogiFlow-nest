@@ -8,7 +8,7 @@ export class AsignacionEventsController {
 
     constructor(private readonly asignacionService: AsignacionService) { }
 
-    @EventPattern('pedido.created')
+    @EventPattern('pedido.creado')
     async handlePedidoCreated(@Payload() payload: any) {
         this.logger.log(`Evento recibido: pedido.created - ${JSON.stringify(payload)}`);
 

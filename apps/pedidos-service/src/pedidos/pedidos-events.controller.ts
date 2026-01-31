@@ -10,19 +10,20 @@ export class PedidosEventsController {
     private readonly pedidosService: IPedidosService,
   ) { }
 
-  @EventPattern('fleet.asignacion.created')
+  @EventPattern('conductor.asignado')
   async onConductorAsignado(
     @Payload()
     payload: {
       pedidoId: string;
-      conductorId: string;
+      conductorId: string; // Puede venir como conductorId o repartidorId, haremos mapping
+      repartidorId?: string;
       placaVehiculo: string;
       tiempoEstimadoLlegada: number;
     },
   ) {
     await this.pedidosService.handleConductorAsignado({
       pedidoId: payload.pedidoId,
-      conductorId: payload.conductorId,
+      conductorId: payload.conductorId || payload.repartidorId || '',
     });
   }
 
@@ -35,5 +36,16 @@ export class PedidosEventsController {
     },
   ) {
     await this.pedidosService.handleAsignacionFallida(payload);
+  }
+
+  @EventPattern('entrega.completada')
+  async onEntregaCompletada(
+    @Payload()
+    payload: {
+      pedidoId: string;
+      fecha: Date;
+    },
+  ) {
+    await this.pedidosService.handleEntregaCompletada(payload);
   }
 }

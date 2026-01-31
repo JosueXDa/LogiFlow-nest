@@ -18,4 +18,6 @@ export interface IPedidosService {
     pedidoId: string;
     razon: string;
   }): Promise<void>;
+  handleEntregaCompletada(payload: { pedidoId: string; fecha: Date }): Promise<void>;
+  confirmPedido(id: string): Promise<Pedido>;
 }
