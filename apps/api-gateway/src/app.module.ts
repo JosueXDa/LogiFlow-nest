@@ -11,6 +11,7 @@ import { VehiculoController } from './flota/vehiculo.controller';
 import { AsignacionController } from './flota/asignacion.controller';
 import { DisponibilidadController } from './flota/disponibilidad.controller';
 import { BillingController } from './billing/billing.controller';
+import { ZonaController } from './flota/zona.controller';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { BillingController } from './billing/billing.controller';
     AsignacionController,
     DisponibilidadController,
     BillingController,
+    ZonaController,
   ],
   providers: [AppService],
 })

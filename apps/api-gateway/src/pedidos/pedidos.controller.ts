@@ -18,7 +18,7 @@ export class PedidosController {
   constructor(
     @Inject(MICROSERVICES_CLIENTS.PEDIDOS_SERVICE)
     private pedidosServiceClient: ClientProxy,
-  ) {}
+  ) { }
 
   @Post()
   @UseGuards(AuthGuard)
@@ -59,6 +59,14 @@ export class PedidosController {
         id,
         dto: updateEstadoDto,
       }),
+    );
+  }
+
+  @Post(':id/confirmar')
+  @UseGuards(AuthGuard)
+  async confirmarPedido(@Param('id') id: string) {
+    return firstValueFrom(
+      this.pedidosServiceClient.send('confirm_pedido', id),
     );
   }
 }

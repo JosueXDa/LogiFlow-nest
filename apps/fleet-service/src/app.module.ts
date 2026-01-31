@@ -7,6 +7,7 @@ import { VehiculoModule } from './modules/vehiculo/vehiculo.module';
 import { AsignacionModule } from './modules/asignacion/asignacion.module';
 import { DisponibilidadModule } from './modules/disponibilidad/disponibilidad.module';
 import { EventsModule } from './modules/events/events.module';
+import { ZonaModule } from './modules/zona/zona.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -25,6 +26,7 @@ import { AppService } from './app.service';
     AsignacionModule,
     DisponibilidadModule,
     EventsModule,
+    ZonaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
