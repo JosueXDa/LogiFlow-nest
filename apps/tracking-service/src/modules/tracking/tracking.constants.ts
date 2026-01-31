@@ -1,0 +1,8 @@
+export const TRACKING_SERVICE = 'TRACKING_SERVICE';
+export const FLEET_CLIENT = 'FLEET_CLIENT';
+
+export enum EstadoRuta {
+    EN_CURSO = 'EN_CURSO',
+    COMPLETADA = 'COMPLETADA',
+    CANCELADA = 'CANCELADA',
+}

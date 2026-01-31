@@ -12,6 +12,7 @@ import { AsignacionController } from './flota/asignacion.controller';
 import { DisponibilidadController } from './flota/disponibilidad.controller';
 import { BillingController } from './billing/billing.controller';
 import { ZonaController } from './flota/zona.controller';
+import { TrackingController } from './tracking/tracking.controller';
 
 @Module({
   imports: [
@@ -44,6 +45,13 @@ import { ZonaController } from './flota/zona.controller';
           port: 4007,
         },
       },
+      {
+        name: MICROSERVICES_CLIENTS.TRACKING_SERVICE,
+        transport: Transport.TCP,
+        options: {
+          port: 4008,
+        },
+      },
     ]),
   ],
   controllers: [
@@ -57,6 +65,7 @@ import { ZonaController } from './flota/zona.controller';
     DisponibilidadController,
     BillingController,
     ZonaController,
+    TrackingController,
   ],
   providers: [AppService],
 })

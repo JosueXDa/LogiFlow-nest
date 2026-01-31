@@ -3,6 +3,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PedidoEventsConsumer } from './consumers/pedido-events.consumer';
 import { EntregaEventsConsumer } from './consumers/entrega-events.consumer';
+import { TrackingEventsConsumer } from './consumers/tracking-events.consumer';
 import { BillingEventsProducer } from './producers/billing-events.producer';
 import { BillingModule } from '../billing/billing.module';
 
@@ -30,6 +31,7 @@ import { BillingModule } from '../billing/billing.module';
     providers: [
         PedidoEventsConsumer,
         EntregaEventsConsumer,
+        TrackingEventsConsumer,
         BillingEventsProducer,
     ],
     exports: [BillingEventsProducer],

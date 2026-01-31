@@ -4,6 +4,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { Pedido, ItemPedido } from './entities';
 import { PedidosController } from './pedidos.controller';
 import { PedidosEventsController } from './pedidos-events.controller';
+import { TrackingEventsConsumer } from './consumers/tracking-events.consumer';
 import { PEDIDOS_EVENT_CLIENT, INVENTORY_CLIENT, FLEET_CLIENT } from './pedidos.constants';
 import { PedidosService } from './service/impl/pedidos.service';
 import { PEDIDOS_SERVICE } from './service/pedidos-service.interface';
@@ -54,13 +55,13 @@ import { PedidosRepository } from './repository/pedidos.repository';
       },
     ]),
   ],
-  controllers: [PedidosController, PedidosEventsController],
+  controllers: [PedidosController, PedidosEventsController, TrackingEventsConsumer],
   providers: [
-    PedidosRepository,
     {
       provide: PEDIDOS_SERVICE,
       useClass: PedidosService,
     },
+    PedidosRepository,
   ],
   exports: [PEDIDOS_SERVICE],
 })

@@ -1,12 +1,16 @@
 import { Module, Global } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { FleetEventPublisher } from './publishers/fleet-event.publisher';
+import { TrackingEventsConsumer } from './consumers/tracking-events.consumer';
+import { Repartidor } from '../repartidor/entities/repartidor.entity';
 import { FLEET_EVENT_CLIENT } from './constants';
 
 @Global()
 @Module({
     imports: [
+        TypeOrmModule.forFeature([Repartidor]),
         ClientsModule.registerAsync([
             {
                 name: FLEET_EVENT_CLIENT,
@@ -30,6 +34,7 @@ import { FLEET_EVENT_CLIENT } from './constants';
             },
         ]),
     ],
+    controllers: [TrackingEventsConsumer],
     providers: [FleetEventPublisher],
     exports: [FleetEventPublisher, ClientsModule],
 })
