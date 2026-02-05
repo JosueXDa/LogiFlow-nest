@@ -196,6 +196,14 @@ export class PedidosService implements IPedidosService {
     return pedido;
   }
 
+  async findAll(filters: { zonaId?: string; estado?: any }): Promise<Pedido[]> {
+    this.logger.debug(
+      `🔍 Buscando pedidos con filtros: ${JSON.stringify(filters)}`,
+    );
+    const pedidos = await this.pedidosRepository.findAll(filters);
+    return pedidos;
+  }
+
   async cancelPedido(id: string, dto: CancelPedidoDto): Promise<Pedido> {
     this.logger.log(`❌ Cancelando pedido: ${id}`);
 

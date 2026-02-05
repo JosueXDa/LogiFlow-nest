@@ -13,9 +13,11 @@ import { DisponibilidadController } from './flota/disponibilidad.controller';
 import { BillingController } from './billing/billing.controller';
 import { ZonaController } from './flota/zona.controller';
 import { TrackingController } from './tracking/tracking.controller';
+import { GraphqlModule } from './graphql/graphql.module';
 
 @Module({
   imports: [
+    GraphqlModule,
     ClientsModule.register([
       {
         name: MICROSERVICES_CLIENTS.PEDIDOS_SERVICE,

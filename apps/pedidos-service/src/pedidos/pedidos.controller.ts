@@ -23,6 +23,11 @@ export class PedidosController {
     return this.pedidosService.findPedidoById(id);
   }
 
+  @MessagePattern('find_all_pedidos')
+  findAll(@Payload() filters: { zonaId?: string; estado?: any }) {
+    return this.pedidosService.findAll(filters);
+  }
+
   @MessagePattern('cancel_pedido')
   cancelar(
     @Payload()

@@ -8,6 +8,7 @@ export const PEDIDOS_SERVICE = Symbol('PEDIDOS_SERVICE');
 export interface IPedidosService {
   createPedido(dto: CreatePedidoDto): Promise<Pedido>;
   findPedidoById(id: string): Promise<Pedido>;
+  findAll(filters: { zonaId?: string; estado?: any }): Promise<Pedido[]>;
   cancelPedido(id: string, dto: CancelPedidoDto): Promise<Pedido>;
   updateEstado(id: string, dto: UpdateEstadoDto): Promise<Pedido>;
   handleConductorAsignado(payload: {
