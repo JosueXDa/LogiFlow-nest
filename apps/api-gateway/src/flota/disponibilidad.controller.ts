@@ -6,6 +6,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { Roles } from '../decorators/roles.decorator';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { MICROSERVICES_CLIENTS } from '../constans';
@@ -20,6 +21,7 @@ export class DisponibilidadController {
 
   @Get('zona/:zonaId')
   @UseGuards(AuthGuard)
+  @Roles('SUPERVISOR')
   async consultarPorZona(
     @Param('zonaId') zonaId: string,
     @Query('tipoVehiculo') tipoVehiculo?: string,

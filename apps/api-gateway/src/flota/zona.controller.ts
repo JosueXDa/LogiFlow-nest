@@ -10,6 +10,7 @@ import {
     Query,
     UseGuards,
 } from '@nestjs/common';
+import { Roles } from '../decorators/roles.decorator';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { MICROSERVICES_CLIENTS } from '../constans';
@@ -24,6 +25,7 @@ export class ZonaController {
 
     @Post()
     @UseGuards(AuthGuard)
+    @Roles('GERENTE', 'ADMIN')
     async create(@Body() createZonaDto: any) {
         return firstValueFrom(
             this.fleetServiceClient.send(
@@ -35,6 +37,7 @@ export class ZonaController {
 
     @Get()
     @UseGuards(AuthGuard)
+    @Roles('GERENTE', 'ADMIN', 'SUPERVISOR')
     async findAll(@Query() query: any) {
         return firstValueFrom(
             this.fleetServiceClient.send({ cmd: 'fleet.zona.findAll' }, query),
@@ -43,6 +46,7 @@ export class ZonaController {
 
     @Get(':id')
     @UseGuards(AuthGuard)
+    @Roles('GERENTE', 'ADMIN')
     async findOne(@Param('id') id: string) {
         return firstValueFrom(
             this.fleetServiceClient.send({ cmd: 'fleet.zona.findOne' }, { id }),
@@ -51,6 +55,7 @@ export class ZonaController {
 
     @Patch(':id')
     @UseGuards(AuthGuard)
+    @Roles('GERENTE', 'ADMIN')
     async update(@Param('id') id: string, @Body() updateZonaDto: any) {
         return firstValueFrom(
             this.fleetServiceClient.send(
@@ -62,6 +67,7 @@ export class ZonaController {
 
     @Delete(':id')
     @UseGuards(AuthGuard)
+    @Roles('GERENTE', 'ADMIN')
     async remove(@Param('id') id: string) {
         return firstValueFrom(
             this.fleetServiceClient.send({ cmd: 'fleet.zona.remove' }, { id }),

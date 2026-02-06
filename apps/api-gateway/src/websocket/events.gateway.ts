@@ -6,9 +6,11 @@ import {
   SubscribeMessage,
   MessageBody,
   ConnectedSocket,
+  WsException,
 } from '@nestjs/websockets';
-import { Logger } from '@nestjs/common';
+import { Logger, UseGuards, UseFilters } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
+import { Roles } from '../decorators/roles.decorator';
 
 @WebSocketGateway({
   cors: {
@@ -59,7 +61,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
               // Guardar datos del usuario en el socket
               (client as any).user = sessionData.user;
               this.logger.log(`✅ Cliente conectado: ${client.id} - Usuario: ${sessionData.user.name || sessionData.user.email}`);
-              
+
               // Mensaje de bienvenida
               client.emit('connection:success', {
                 message: 'Conectado exitosamente al WebSocket',
@@ -90,6 +92,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // Suscribirse a un pedido específico
   @SubscribeMessage('subscribe:pedido')
+  @Roles('CLIENTE')
   handleSubscribePedido(
     @MessageBody() data: { pedidoId: string },
     @ConnectedSocket() client: Socket,
@@ -102,6 +105,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // Desuscribirse de un pedido
   @SubscribeMessage('unsubscribe:pedido')
+  @Roles('CLIENTE')
   handleUnsubscribePedido(
     @MessageBody() data: { pedidoId: string },
     @ConnectedSocket() client: Socket,
@@ -114,6 +118,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // Suscribirse a una zona (para supervisores)
   @SubscribeMessage('subscribe:zona')
+  @Roles('SUPERVISOR')
   handleSubscribeZona(
     @MessageBody() data: { zonaId: string },
     @ConnectedSocket() client: Socket,
@@ -126,9 +131,10 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // Suscribirse a eventos globales (para administradores)
   @SubscribeMessage('subscribe:global')
+  @Roles('ADMIN', 'GERENTE')
   handleSubscribeGlobal(@ConnectedSocket() client: Socket) {
     const user = (client as any).user;
-    
+
     // Solo permitir a usuarios con rol admin/gerente
     if (user?.role !== 'admin' && user?.role !== 'gerente') {
       return { event: 'error', message: 'No tienes permisos para suscribirte a eventos globales' };
@@ -151,7 +157,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const room = `pedido:${data.pedidoId}`;
     this.server.to(room).emit('pedido:actualizado', data);
     this.logger.debug(`📦 Broadcast pedido actualizado a ${room}`);
-    
+
     // También enviar a la zona si está disponible
     if (data.zonaId) {
       this.server.to(`zona:${data.zonaId}`).emit('pedido:actualizado', data);
@@ -162,7 +168,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const room = `pedido:${data.pedidoId}`;
     this.server.to(room).emit('conductor:asignado', data);
     this.logger.debug(`🚗 Broadcast conductor asignado a ${room}`);
-    
+
     // También enviar a la zona
     if (data.zonaId) {
       this.server.to(`zona:${data.zonaId}`).emit('conductor:asignado', data);
@@ -173,7 +179,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const room = `pedido:${data.pedidoId}`;
     this.server.to(room).emit('entrega:completada', data);
     this.logger.debug(`✅ Broadcast entrega completada a ${room}`);
-    
+
     if (data.zonaId) {
       this.server.to(`zona:${data.zonaId}`).emit('entrega:completada', data);
     }

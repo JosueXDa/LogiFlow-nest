@@ -9,6 +9,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { Roles } from '../decorators/roles.decorator';
 import { ClientProxy } from '@nestjs/microservices';
 import { MICROSERVICES_CLIENTS } from '../constans';
 import { AuthGuard } from '../guards/auth.guard';
@@ -19,11 +20,12 @@ export class InventoryController {
   constructor(
     @Inject(MICROSERVICES_CLIENTS.INVENTORY_SERVICE)
     private inventoryServiceClient: ClientProxy,
-  ) {}
+  ) { }
 
   // CRUD de Productos
   @Post('products')
   @UseGuards(AuthGuard)
+  @Roles('GERENTE', 'ADMIN')
   async createProduct(@Body() createProductDto: any) {
     return firstValueFrom(
       this.inventoryServiceClient.send('create_product', createProductDto),
@@ -54,6 +56,7 @@ export class InventoryController {
 
   @Patch('products/:id')
   @UseGuards(AuthGuard)
+  @Roles('GERENTE', 'ADMIN')
   async updateProduct(@Param('id') id: string, @Body() updateProductDto: any) {
     return firstValueFrom(
       this.inventoryServiceClient.send('update_product', {
@@ -65,6 +68,7 @@ export class InventoryController {
 
   @Delete('products/:id')
   @UseGuards(AuthGuard)
+  @Roles('GERENTE', 'ADMIN')
   async deleteProduct(@Param('id') id: string) {
     return firstValueFrom(
       this.inventoryServiceClient.send('delete_product', id),
@@ -74,6 +78,7 @@ export class InventoryController {
   // Gestión de Stock
   @Patch('products/:id/stock')
   @UseGuards(AuthGuard)
+  @Roles('GERENTE', 'ADMIN')
   async updateStock(@Param('id') id: string, @Body() updateStockDto: any) {
     return firstValueFrom(
       this.inventoryServiceClient.send('update_stock', {
@@ -85,6 +90,7 @@ export class InventoryController {
 
   @Post('products/:id/stock/add')
   @UseGuards(AuthGuard)
+  @Roles('GERENTE', 'ADMIN')
   async addStock(@Param('id') id: string, @Body() body: { cantidad: number }) {
     return firstValueFrom(
       this.inventoryServiceClient.send('add_stock', {
@@ -103,6 +109,7 @@ export class InventoryController {
   // Gestión de Reservas
   @Post('reserves')
   @UseGuards(AuthGuard)
+  @Roles('ADMIN', 'SISTEMA')
   async reserveStock(@Body() reserveStockDto: any) {
     return firstValueFrom(
       this.inventoryServiceClient.send('reserve_stock', reserveStockDto),
@@ -111,6 +118,7 @@ export class InventoryController {
 
   @Patch('reserves/:id/confirm')
   @UseGuards(AuthGuard)
+  @Roles('ADMIN', 'SISTEMA')
   async confirmReserve(@Param('id') id: string) {
     return firstValueFrom(
       this.inventoryServiceClient.send('confirm_reserve', id),
@@ -119,6 +127,7 @@ export class InventoryController {
 
   @Patch('reserves/:id/cancel')
   @UseGuards(AuthGuard)
+  @Roles('ADMIN', 'SISTEMA')
   async cancelReserve(@Param('id') id: string) {
     return firstValueFrom(
       this.inventoryServiceClient.send('cancel_reserve', id),
@@ -127,6 +136,7 @@ export class InventoryController {
 
   @Get('reserves/pedido/:pedidoId')
   @UseGuards(AuthGuard)
+  @Roles('ADMIN', 'SISTEMA')
   async getReservesByPedido(@Param('pedidoId') pedidoId: string) {
     return firstValueFrom(
       this.inventoryServiceClient.send('get_reserves_by_pedido', pedidoId),
