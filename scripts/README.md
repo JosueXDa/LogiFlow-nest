@@ -159,7 +159,47 @@ pnpm seed:billing
 
 ---
 
-### 🔄 Scripts de Simulación
+### � Scripts de Migración
+
+#### `migrate-auth-to-uuid.mjs`
+Migra los IDs de usuarios de Better Auth de strings alfanuméricos a UUIDs estándar.
+
+**Uso:**
+```bash
+bun scripts/migrate-auth-to-uuid.mjs
+# o
+pnpm migrate:auth:uuid
+```
+
+**Requisitos:**
+- PostgreSQL corriendo con `auth_db`
+- Auth Service detenido (para evitar conflictos)
+
+**¿Qué hace?**
+1. 🔍 Lee todos los usuarios existentes de `auth_db`
+2. 🆔 Genera un UUID único para cada usuario
+3. 🔄 Actualiza las referencias en todas las tablas relacionadas:
+   - `session` (campo `userId`)
+   - `account` (campo `userId`)
+   - `verification` (campo `userId` si existe)
+4. 💾 Actualiza los IDs de los usuarios
+5. 🔧 Modifica el esquema de la base de datos (columnas a tipo UUID)
+
+**⚠️ IMPORTANTE:**
+- Este script es **transaccional** - o se completa todo o no se aplica nada
+- Las sesiones existentes se invalidan durante la migración
+- Después de ejecutar, debes hacer **login nuevamente** para obtener nuevas sesiones con UUIDs
+- Ejecuta este script **solo una vez** después de cambiar la configuración de Better Auth
+- Asegúrate de tener un backup de `auth_db` antes de ejecutar
+
+**Resultado:**
+- ✅ Todos los IDs de usuarios ahora son UUIDs válidos (formato: `a1b2c3d4-e5f6-7890-abcd-ef1234567890`)
+- ✅ Compatible con campos `uuid` en otras bases de datos (pedidos, etc.)
+- ✅ Better Auth seguirá generando UUIDs para nuevos usuarios
+
+---
+
+### �🔄 Scripts de Simulación
 
 #### `simulate-order-flow.mjs`
 Simula un flujo completo de pedido desde la creación hasta la entrega.

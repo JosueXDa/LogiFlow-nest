@@ -227,6 +227,7 @@ async function seedFleet() {
 
     // 3. CREAR VEHÍCULOS
     console.log('\n🚛 Creando Vehículos...');
+    const vehiculosCreados = [];
     for (const v of vehicles) {
         try {
             const res = await fetch(`${API_GATEWAY_URL}/flota/vehiculos`, {
@@ -236,7 +237,9 @@ async function seedFleet() {
             });
 
             if (res.ok) {
-                console.log(`✅ Vehículo creado: ${v.placa}`);
+                const vehiculo = await res.json();
+                vehiculosCreados.push(vehiculo);
+                console.log(`✅ Vehículo creado: ${v.placa} (ID: ${vehiculo.id})`);
             } else {
                 const err = await res.text();
                 // Si ya existe (Conflict), lo ignoramos o lo reportamos suavemente
@@ -258,6 +261,11 @@ async function seedFleet() {
         // Asignar zona de forma circular (si hay 3 zonas y 3 repartidores, uno por zona)
         const zonaIndex = i % zonasCreadas.length;
         d.zonaId = zonasCreadas[zonaIndex].id;
+        
+        // Asignar vehículo si hay disponibles
+        if (vehiculosCreados.length > i) {
+            d.vehiculoId = vehiculosCreados[i].id;
+        }
 
         try {
             const res = await fetch(`${API_GATEWAY_URL}/flota/repartidores`, {
@@ -267,7 +275,8 @@ async function seedFleet() {
             });
 
             if (res.ok) {
-                console.log(`✅ Repartidor creado: ${d.nombre} (Zona: ${zonasCreadas[zonaIndex].nombre})`);
+                const repartidor = await res.json();
+                console.log(`✅ Repartidor creado: ${d.nombre} (Zona: ${zonasCreadas[zonaIndex].nombre}, Vehículo: ${d.vehiculoId ? 'Asignado' : 'Sin asignar'})`);
             } else {
                 const err = await res.text();
                 if (res.status === 409) {

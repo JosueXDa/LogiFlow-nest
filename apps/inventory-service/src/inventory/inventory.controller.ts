@@ -1,4 +1,4 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { InventoryService } from './inventory.service';
 import {
@@ -9,12 +9,26 @@ import {
 } from './dto';
 @Controller()
 export class InventoryController {
+  private readonly logger = new Logger(InventoryController.name);
+
   constructor(private readonly inventoryService: InventoryService) {}
 
   // CRUD de Productos
   @MessagePattern('create_product')
-  createProduct(@Payload() dto: CreateProductDto) {
-    return this.inventoryService.createProduct(dto);
+  async createProduct(@Payload() dto: CreateProductDto) {
+    try {
+      this.logger.log(`📥 Received create_product request`);
+      this.logger.debug(`Product data: ${JSON.stringify(dto)}`);
+      
+      const result = await this.inventoryService.createProduct(dto);
+      
+      this.logger.log(`✅ Product created: ${result.nombre} (${result.id})`);
+      return result;
+    } catch (error) {
+      this.logger.error(`❌ Failed to create product: ${error.message}`);
+      this.logger.error(`Error details:`, error.stack);
+      throw error;
+    }
   }
 
   @MessagePattern('get_all_products')

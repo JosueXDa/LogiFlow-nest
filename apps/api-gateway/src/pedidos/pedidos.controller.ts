@@ -7,6 +7,8 @@ import {
   Patch,
   Post,
   UseGuards,
+  OnModuleInit,
+  Logger,
 } from '@nestjs/common';
 import { Roles } from '../decorators/roles.decorator';
 import { ClientProxy } from '@nestjs/microservices';
@@ -15,19 +17,40 @@ import { AuthGuard } from '../guards/auth.guard';
 import { firstValueFrom } from 'rxjs';
 
 @Controller('pedidos')
-export class PedidosController {
+export class PedidosController implements OnModuleInit {
+  private readonly logger = new Logger(PedidosController.name);
+
   constructor(
     @Inject(MICROSERVICES_CLIENTS.PEDIDOS_SERVICE)
     private pedidosServiceClient: ClientProxy,
   ) { }
 
+  async onModuleInit() {
+    try {
+      await this.pedidosServiceClient.connect();
+      this.logger.log('✅ Connected to Pedidos Service');
+    } catch (error) {
+      this.logger.error('❌ Failed to connect to Pedidos Service:', error.message);
+    }
+  }
+
   @Post()
   @UseGuards(AuthGuard)
   @Roles('CLIENTE', 'REPARTIDOR', 'SUPERVISOR', 'GERENTE', 'ADMIN')
   async createPedido(@Body() createPedidoDto: any) {
-    return firstValueFrom(
-      this.pedidosServiceClient.send('create_pedido', createPedidoDto),
-    );
+    this.logger.log('📝 Creating pedido...');
+    this.logger.debug('DTO:', JSON.stringify(createPedidoDto));
+    
+    try {
+      const result = await firstValueFrom(
+        this.pedidosServiceClient.send('create_pedido', createPedidoDto),
+      );
+      this.logger.log('✅ Pedido created successfully');
+      return result;
+    } catch (error) {
+      this.logger.error('❌ Error creating pedido:', error.message);
+      throw error;
+    }
   }
 
   @Get(':id')

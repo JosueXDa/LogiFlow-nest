@@ -40,7 +40,7 @@ export class Factura {
     @Column({ type: 'uuid' })
     pedidoId: string;
 
-    @Column({ type: 'uuid' })
+    @Column({ type: 'varchar', length: 255 })
     clienteId: string;
 
     @Column({ length: 200 })

@@ -18,7 +18,17 @@ export class PedidoEventsConsumer {
     constructor(
         private readonly billingService: BillingService,
         private readonly eventsProducer: BillingEventsProducer,
-    ) { }
+    ) {
+        this.logger.log('🎯 PedidoEventsConsumer inicializado - Esperando eventos...');
+    }
+
+    /**
+     * Handler comodín para debugging - captura TODOS los eventos
+     */
+    @EventPattern('*')
+    async handleAll(@Payload() data: any) {
+        this.logger.warn(`🔔 Evento recibido (comodín): ${JSON.stringify(data).substring(0, 200)}`);
+    }
 
     /**
      * Evento: pedido.creado
@@ -101,6 +111,7 @@ export class PedidoEventsConsumer {
 
         try {
             this.logger.log(`📨 Evento recibido: pedido.confirmado - ${data.pedidoId}`);
+            this.logger.debug(`📦 Payload completo: ${JSON.stringify(data)}`);
 
             // Buscar factura por pedidoId
             const factura = await this.billingService.findByPedidoId(data.pedidoId);

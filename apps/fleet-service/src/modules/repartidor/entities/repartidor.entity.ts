@@ -65,9 +65,6 @@ export class Repartidor {
     @JoinColumn({ name: 'vehiculo_id' })
     vehiculo: VehiculoEntrega;
 
-    @Column({ type: 'uuid', nullable: true })
-    vehiculoId: string;
-
     @OneToMany(() => Asignacion, asignacion => asignacion.repartidor)
     asignaciones: Asignacion[];
 

@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
+import * as crypto from 'crypto';
 import { ItemPedido, Pedido, PedidoEstado, TipoVehiculo } from '../../entities';
 import { CreatePedidoDto } from '../../dto/create-pedido.dto';
 import { CancelPedidoDto } from '../../dto/cancel-pedido.dto';
@@ -14,6 +15,7 @@ import { UpdateEstadoDto } from '../../dto/update-estado.dto';
 import {
   PEDIDOS_EVENT_CLIENT,
   INVENTORY_CLIENT,
+  FLEET_CLIENT,
 } from '../../pedidos.constants';
 import { PedidosRepository } from '../../repository/pedidos.repository';
 import { IPedidosService } from '../pedidos-service.interface';
@@ -28,6 +30,8 @@ export class PedidosService implements IPedidosService {
     private readonly eventClient: ClientProxy,
     @Inject(INVENTORY_CLIENT)
     private readonly inventoryClient: ClientProxy,
+    @Inject(FLEET_CLIENT)
+    private readonly fleetClient: ClientProxy,
   ) { }
 
   async createPedido(dto: CreatePedidoDto): Promise<Pedido> {
@@ -73,19 +77,59 @@ export class PedidosService implements IPedidosService {
         `✅ Pedido ${savedPedido.id} creado exitosamente con ${reservas.length} reservas`,
       );
 
+      // Calcular peso total y distancia (valores temporales)
+      const pesoTotal = savedPedido.items.reduce((sum, item) => sum + (item.peso * item.cantidad), 0);
+      const distanciaKm = this.calcularDistancia(savedPedido.direccionOrigen, savedPedido.direccionDestino);
+
+      // Mapear TipoVehiculo de Pedidos a Billing
+      const tipoVehiculoMap = {
+        'MOTO': 'MOTORIZADO',
+        'LIVIANO': 'VEHICULO_LIVIANO',
+        'CAMION': 'CAMION'
+      };
+
+      // Determinar tipoEntrega basado en distancia
+      let tipoEntrega = 'URBANA';
+      if (distanciaKm > 50) {
+        tipoEntrega = 'INTERMUNICIPAL';
+      }
+      if (distanciaKm > 200) {
+        tipoEntrega = 'NACIONAL';
+      }
+
+      // Emit evento a Billing Service para crear factura
       this.eventClient.emit('pedido.creado', {
         pedidoId: savedPedido.id,
         clienteId: savedPedido.clienteId,
-        items: savedPedido.items.map((item) => ({
-          itemId: item.id,
-          productoId: item.productoId,
-          productoSku: item.productoSku,
-          descripcion: item.descripcion,
-          cantidad: item.cantidad,
-          reservaId: item.reservaId,
-        })),
-        fecha: new Date(),
+        clienteNombre: 'Cliente Temporal', // TODO: Obtener de auth-service
+        tipoEntrega,
+        tipoVehiculo: tipoVehiculoMap[savedPedido.tipoVehiculo] || 'MOTORIZADO',
+        distanciaKm,
+        pesoKg: pesoTotal,
+        esUrgente: false, // TODO: Agregar al DTO si es necesario
+        timestamp: new Date().toISOString(),
+        eventId: this.generarEventId(),
       });
+
+      // Emit evento a Fleet Service para asignar repartidor
+      this.fleetClient.emit('pedido.creado', {
+        pedidoId: savedPedido.id,
+        clienteId: savedPedido.clienteId,
+        tipoEntrega,
+        tipoVehiculo: tipoVehiculoMap[savedPedido.tipoVehiculo] || 'MOTORIZADO',
+        pesoKg: pesoTotal,
+        volumenM3: 0, // TODO: Calcular volumen si es necesario
+        origenLat: savedPedido.direccionOrigen.lat,
+        origenLng: savedPedido.direccionOrigen.lng,
+        destinoLat: savedPedido.direccionDestino.lat,
+        destinoLng: savedPedido.direccionDestino.lng,
+        distanciaKm,
+        esUrgente: false,
+        timestamp: new Date().toISOString(),
+        eventId: this.generarEventId(),
+      });
+
+      this.logger.log(`📤 Eventos pedido.creado emitidos a Billing y Fleet`);
 
       return savedPedido;
     } catch (error) {
@@ -358,22 +402,76 @@ export class PedidosService implements IPedidosService {
   async confirmPedido(id: string): Promise<Pedido> {
     const pedido = await this.findPedidoById(id);
 
-    if (pedido.estado !== PedidoEstado.PENDIENTE) {
-      throw new BadRequestException('Solo se pueden confirmar pedidos en estado PENDIENTE');
+    if (pedido.estado !== PedidoEstado.PENDIENTE && pedido.estado !== PedidoEstado.ASIGNADO) {
+      throw new BadRequestException('Solo se pueden confirmar pedidos en estado PENDIENTE o ASIGNADO');
     }
 
-    // Aquí podria ir lógica de pago
+    // Actualizar estado a CONFIRMADO
+    pedido.estado = PedidoEstado.CONFIRMADO;
+    await this.pedidosRepository.savePedido(pedido);
+    this.logger.log(`✅ Pedido ${id} actualizado a estado CONFIRMADO`);
 
     // Emitir evento para facturación
-    this.eventClient.emit('pedido.confirmado', {
+    const eventPayload = {
       pedidoId: pedido.id,
       timestamp: new Date().toISOString(),
       eventId: crypto.randomUUID(),
-      clienteId: pedido.clienteId, // Billing lo necesita
-      total: 100 // Mock total, deberia venir del pedido
-    });
+      clienteId: pedido.clienteId,
+      total: 100 // Mock total, el real vendrá del evento factura.emitida
+    };
 
-    this.logger.log(`✅ Pedido ${id} confirmado manualmente. Evento pedido.confirmado emitido.`);
+    this.logger.debug(`📤 Emitiendo evento 'pedido.confirmado' con payload: ${JSON.stringify(eventPayload)}`);
+    
+    try {
+      this.eventClient.emit('pedido.confirmado', eventPayload);
+      this.logger.log(`✅ Evento pedido.confirmado emitido para pedido ${id}`);
+    } catch (error) {
+      this.logger.error(`❌ Error emitiendo evento: ${error.message}`, error.stack);
+    }
+
     return pedido;
+  }
+
+  /**
+   * Actualiza el precioTotal del pedido (llamado desde evento factura.emitida)
+   */
+  async updatePrecioTotal(pedidoId: string, precioTotal: number): Promise<void> {
+    this.logger.debug(`💰 Actualizando precioTotal para pedido ${pedidoId}: ${precioTotal}`);
+    
+    const pedido = await this.findPedidoById(pedidoId);
+    pedido.precioTotal = precioTotal;
+    await this.pedidosRepository.savePedido(pedido);
+    
+    this.logger.log(`✅ Precio total actualizado: ${precioTotal}`);
+  }
+
+  /**
+   * Calcula la distancia entre dos coordenadas usando la fórmula de Haversine
+   */
+  private calcularDistancia(
+    origen: { lat: number; lng: number },
+    destino: { lat: number; lng: number }
+  ): number {
+    const R = 6371; // Radio de la Tierra en km
+    const dLat = this.deg2rad(destino.lat - origen.lat);
+    const dLng = this.deg2rad(destino.lng - origen.lng);
+    
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.deg2rad(origen.lat)) * Math.cos(this.deg2rad(destino.lat)) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c; // Distancia en km
+    
+    return Math.round(distance * 100) / 100; // Redondear a 2 decimales
+  }
+
+  private deg2rad(deg: number): number {
+    return deg * (Math.PI / 180);
+  }
+
+  private generarEventId(): string {
+    return crypto.randomUUID();
   }
 }

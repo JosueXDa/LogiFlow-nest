@@ -28,11 +28,6 @@ async function bootstrap() {
       prefetchCount: 1,
       queueOptions: {
         durable: true,
-        arguments: {
-          'x-message-ttl': 86400000,
-          'x-dead-letter-exchange': 'dlx.billing',
-          'x-dead-letter-routing-key': 'billing.failed',
-        },
       },
     },
   });

@@ -9,13 +9,16 @@ export class RepartidorRepository extends Repository<Repartidor> {
         super(Repartidor, dataSource.createEntityManager());
     }
 
-    async findDisponiblesPorZona(zonaId: string): Promise<Repartidor[]> {
-        return this.find({
-            where: {
-                zonaId,
-                estado: EstadoRepartidor.DISPONIBLE,
-            },
-            relations: ['vehiculo'],
-        });
+    async findDisponiblesPorZona(zonaId?: string): Promise<Repartidor[]> {
+        const query = this.createQueryBuilder('repartidor')
+            .leftJoinAndSelect('repartidor.vehiculo', 'vehiculo')
+            .where('repartidor.estado = :estado', { estado: EstadoRepartidor.DISPONIBLE });
+
+        // Solo filtrar por zona si se proporciona
+        if (zonaId) {
+            query.andWhere('repartidor.zonaId = :zonaId', { zonaId });
+        }
+
+        return query.getMany();
     }
 }

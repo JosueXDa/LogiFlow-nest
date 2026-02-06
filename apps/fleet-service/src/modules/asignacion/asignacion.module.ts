@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Asignacion } from './entities/asignacion.entity';
 import { AsignacionService } from './service/asignacion.service';
@@ -14,8 +14,8 @@ import { EventsModule } from '../events/events.module';
 @Module({
     imports: [
         TypeOrmModule.forFeature([Asignacion]),
-        RepartidorModule,
-        EventsModule,
+        forwardRef(() => RepartidorModule),
+        forwardRef(() => EventsModule),
     ],
     controllers: [AsignacionController, AsignacionEventsController],
     providers: [

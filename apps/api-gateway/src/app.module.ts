@@ -48,7 +48,7 @@ import { SessionValidatorModule } from './guards/session-validator.module';
         transport: Transport.TCP,
         options: {
           host: '127.0.0.1',
-          port: 3004,
+          port: 4006,
           retryAttempts: 5,
           retryDelay: 3000,
         },
