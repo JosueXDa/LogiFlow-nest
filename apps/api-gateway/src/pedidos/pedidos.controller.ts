@@ -23,7 +23,7 @@ export class PedidosController {
 
   @Post()
   @UseGuards(AuthGuard)
-  @Roles('CLIENTE')
+  @Roles('CLIENTE', 'REPARTIDOR', 'SUPERVISOR', 'GERENTE', 'ADMIN')
   async createPedido(@Body() createPedidoDto: any) {
     return firstValueFrom(
       this.pedidosServiceClient.send('create_pedido', createPedidoDto),

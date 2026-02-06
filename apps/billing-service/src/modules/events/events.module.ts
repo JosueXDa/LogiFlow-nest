@@ -18,10 +18,13 @@ import { BillingModule } from '../billing/billing.module';
                     transport: Transport.RMQ,
                     options: {
                         urls: [configService.get('rabbitmq.url') || process.env.RABBITMQ_URL || 'amqp://localhost:5672'],
-                        queue: 'events_queue',
+                        queue: 'billing_events_queue',
                         queueOptions: {
                             durable: true,
                         },
+                        // Emit to Topic Exchange for audit interception
+                        exchange: 'logiflow_events',
+                        exchangeType: 'topic',
                     },
                 }),
             },
