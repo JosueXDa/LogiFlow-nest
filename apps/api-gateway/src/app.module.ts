@@ -14,6 +14,8 @@ import { BillingController } from './billing/billing.controller';
 import { ZonaController } from './flota/zona.controller';
 import { TrackingController } from './tracking/tracking.controller';
 import { GraphqlModule } from './graphql/graphql.module';
+import { EventsGateway } from './websocket/events.gateway';
+import { WebSocketRelayConsumer } from './websocket/websocket-relay.consumer';
 
 @Module({
   imports: [
@@ -68,7 +70,8 @@ import { GraphqlModule } from './graphql/graphql.module';
     BillingController,
     ZonaController,
     TrackingController,
+    WebSocketRelayConsumer,
   ],
-  providers: [AppService],
+  providers: [AppService, EventsGateway],
 })
 export class AppModule { }
