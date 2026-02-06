@@ -1,4 +1,4 @@
-import { Controller, Logger, OnModuleInit } from '@nestjs/common';
+import { Controller, Logger, OnModuleInit, Get, Param, Query } from '@nestjs/common';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import { AuditService } from './audit.service';
 
@@ -37,5 +37,50 @@ export class AuditController implements OnModuleInit {
             this.logger.error(`❌ Failed to process event '${routingKey}':`, error.message);
             channel.nack(originalMessage, false, false);
         }
+    }
+
+    // ============ HTTP REST ENDPOINTS ============
+
+    /**
+     * GET /notifications
+     * Lista todas las notificaciones guardadas (últimas 100)
+     */
+    @Get('notifications')
+    async getAllNotifications(@Query('limit') limit?: number) {
+        this.logger.log(`🔍 GET /notifications - Limit: ${limit || 100}`);
+        return this.auditService.getAllLogs(limit || 100);
+    }
+
+    /**
+     * GET /notifications/:id
+     * Obtiene una notificación específica por ID
+     */
+    @Get('notifications/:id')
+    async getNotificationById(@Param('id') id: string) {
+        this.logger.log(`🔍 GET /notifications/${id}`);
+        return this.auditService.getLogById(id);
+    }
+
+    /**
+     * GET /notifications/event/:eventName
+     * Filtra notificaciones por nombre de evento
+     */
+    @Get('notifications/event/:eventName')
+    async getNotificationsByEvent(
+        @Param('eventName') eventName: string,
+        @Query('limit') limit?: number
+    ) {
+        this.logger.log(`🔍 GET /notifications/event/${eventName}`);
+        return this.auditService.getLogsByEvent(eventName, limit || 50);
+    }
+
+    /**
+     * GET /notifications/stats
+     * Estadísticas de notificaciones
+     */
+    @Get('notifications/stats')
+    async getNotificationStats() {
+        this.logger.log(`📊 GET /notifications/stats`);
+        return this.auditService.getStats();
     }
 }

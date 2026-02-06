@@ -39,6 +39,48 @@ async function bootstrap() {
   });
   logger.log(`📡 Listening on 'inventory_events_queue'`);
 
+  // Listen to billing_events_queue
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: [rmqUrl],
+      queue: 'billing_events_queue',
+      noAck: false,
+      prefetchCount: 1,
+      queueOptions: { durable: true },
+      wildcards: true,
+    },
+  });
+  logger.log(`📡 Listening on 'billing_events_queue'`);
+
+  // Listen to fleet_events_queue
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: [rmqUrl],
+      queue: 'fleet_events_queue',
+      noAck: false,
+      prefetchCount: 1,
+      queueOptions: { durable: true },
+      wildcards: true,
+    },
+  });
+  logger.log(`📡 Listening on 'fleet_events_queue'`);
+
+  // Listen to tracking_events_queue
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: [rmqUrl],
+      queue: 'tracking_events_queue',
+      noAck: false,
+      prefetchCount: 1,
+      queueOptions: { durable: true },
+      wildcards: true,
+    },
+  });
+  logger.log(`📡 Listening on 'tracking_events_queue'`);
+
   await app.startAllMicroservices();
   logger.log(`✅ Microservice transport started successfully`);
 
