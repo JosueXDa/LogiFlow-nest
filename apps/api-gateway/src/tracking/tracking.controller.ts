@@ -1,5 +1,5 @@
 import { Controller, Post, Get, Param, Body, Query, UseGuards, Inject } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBody, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBody, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth, ApiCookieAuth } from '@nestjs/swagger';
 import { ClientProxy } from '@nestjs/microservices';
 import { Roles } from '../decorators/roles.decorator';
 import { firstValueFrom } from 'rxjs';
@@ -8,6 +8,7 @@ import { UpdateLocationDto, IniciarRutaDto, HistorialQueryDto } from '../swagger
 
 @ApiTags('Tracking')
 @ApiBearerAuth()
+@ApiCookieAuth()
 @Controller('tracking')
 export class TrackingController {
     constructor(

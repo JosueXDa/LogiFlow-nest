@@ -10,7 +10,7 @@ import {
     Query,
     UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBody, ApiParam, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBody, ApiParam, ApiResponse, ApiBearerAuth, ApiCookieAuth } from '@nestjs/swagger';
 import { Roles } from '../decorators/roles.decorator';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
@@ -20,6 +20,7 @@ import { CreateZonaDto, UpdateZonaDto } from '../swagger/dto/fleet.dto';
 
 @ApiTags('Fleet-Zonas')
 @ApiBearerAuth()
+@ApiCookieAuth()
 @Controller('flota/zonas')
 export class ZonaController {
     constructor(

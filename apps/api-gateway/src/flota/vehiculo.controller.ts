@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBody, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBody, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth, ApiCookieAuth } from '@nestjs/swagger';
 import { Roles } from '../decorators/roles.decorator';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
@@ -19,6 +19,7 @@ import { CreateVehiculoDto, UpdateVehiculoDto } from '../swagger/dto/fleet.dto';
 
 @ApiTags('Fleet-Vehiculos')
 @ApiBearerAuth()
+@ApiCookieAuth()
 @Controller('flota/vehiculos')
 export class VehiculoController {
   constructor(

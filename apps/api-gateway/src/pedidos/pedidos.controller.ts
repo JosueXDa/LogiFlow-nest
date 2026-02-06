@@ -8,7 +8,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBody, ApiParam, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBody, ApiParam, ApiResponse, ApiBearerAuth, ApiCookieAuth } from '@nestjs/swagger';
 import { Roles } from '../decorators/roles.decorator';
 import { ClientProxy } from '@nestjs/microservices';
 import { MICROSERVICES_CLIENTS } from '../constans';
@@ -18,6 +18,7 @@ import { CreatePedidoDto, CancelPedidoDto, UpdateEstadoDto } from '../swagger/dt
 
 @ApiTags('Pedidos')
 @ApiBearerAuth()
+@ApiCookieAuth()
 @Controller('pedidos')
 export class PedidosController {
   constructor(

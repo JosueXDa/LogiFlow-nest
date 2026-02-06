@@ -6,7 +6,10 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBody, ApiParam, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBody, ApiParam, ApiResponse, ApiBearerAuth, ApiCookieAuth } from '@nestjs/swagger';
 import { Roles } from '../decorators/roles.decorator';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
@@ -16,6 +19,7 @@ import { AsignarRepartidorDto, FinalizarAsignacionDto } from '../swagger/dto/fle
 
 @ApiTags('Fleet-Asignaciones')
 @ApiBearerAuth()
+@ApiCookieAuth()
 @Controller('flota/asignaciones')
 export class AsignacionController {
   constructor(

@@ -6,7 +6,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiBearerAuth, ApiCookieAuth } from '@nestjs/swagger';
 import { Roles } from '../decorators/roles.decorator';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
@@ -15,6 +15,7 @@ import { AuthGuard } from '../guards/auth.guard';
 
 @ApiTags('Fleet-Disponibilidad')
 @ApiBearerAuth()
+@ApiCookieAuth()
 @Controller('flota/disponibilidad')
 export class DisponibilidadController {
   constructor(

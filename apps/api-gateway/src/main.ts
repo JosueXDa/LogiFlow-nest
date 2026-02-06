@@ -11,9 +11,17 @@ async function bootstrap() {
   // Configuración de Swagger
   const config = new DocumentBuilder()
     .setTitle('LogiFlow API')
-    .setDescription('API Gateway para el sistema de logística LogiFlow. Incluye endpoints para gestión de pedidos, flota, inventario, facturación y tracking.')
+    .setDescription(
+      'API Gateway para el sistema de logística LogiFlow. Incluye endpoints para gestión de pedidos, flota, inventario, facturación y tracking.'
+    )
     .setVersion('1.0')
     .addBearerAuth()
+    .addCookieAuth('better-auth.session_token', {
+      type: 'apiKey',
+      in: 'cookie',
+      name: 'better-auth.session_token',
+    })
+    .addTag('Auth', 'Autenticación y autorización')
     .addTag('Billing', 'Facturación y tarifas')
     .addTag('Inventory', 'Gestión de productos y stock')
     .addTag('Pedidos', 'Gestión de pedidos')
@@ -30,6 +38,14 @@ async function bootstrap() {
     customSiteTitle: 'LogiFlow API Docs',
     swaggerOptions: {
       persistAuthorization: true,
+      withCredentials: true, // Habilita el envío de cookies del navegador
+      requestInterceptor: (req) => {
+        // Asegura que las credenciales (cookies) se incluyan en todas las peticiones
+        req.credentials = 'include';
+        // Agrega el header Origin para que el servidor acepte la petición
+        req.headers['Origin'] = 'http://localhost:3000';
+        return req;
+      },
     },
   });
 
