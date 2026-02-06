@@ -21,7 +21,7 @@ import { PedidosRepository } from './repository/pedidos.repository';
           urls: [
             process.env.RABBITMQ_URL ?? 'amqp://admin:admin@localhost:5672',
           ],
-          queue: 'pedidos_events',
+          queue: 'pedidos_events_queue', // Queue specific to pedidos events (optional if just emitting)
           queueOptions: {
             durable: true,
           },
