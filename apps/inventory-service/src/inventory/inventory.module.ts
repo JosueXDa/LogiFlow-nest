@@ -18,10 +18,13 @@ import { INVENTORY_EVENT_CLIENT } from './inventory.constants';
           urls: [
             process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672',
           ],
-          queue: 'inventory_events',
+          queue: 'inventory_events_queue',
           queueOptions: {
             durable: true,
           },
+          // Emit to Topic Exchange
+          exchange: 'logiflow_events',
+          exchangeType: 'topic',
         },
       },
     ]),
@@ -30,4 +33,4 @@ import { INVENTORY_EVENT_CLIENT } from './inventory.constants';
   providers: [InventoryService],
   exports: [InventoryService],
 })
-export class InventoryModule {}
+export class InventoryModule { }

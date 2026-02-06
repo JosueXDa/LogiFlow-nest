@@ -19,7 +19,7 @@ import { FLEET_EVENT_CLIENT } from './constants';
                     transport: Transport.RMQ,
                     options: {
                         urls: [configService.get<string>('RABBITMQ_URL') || 'amqp://admin:admin@localhost:5672'],
-                        queue: 'fleet_events',
+                        queue: 'fleet_events_queue',
                         queueOptions: {
                             durable: true,
                             arguments: {
@@ -28,6 +28,9 @@ import { FLEET_EVENT_CLIENT } from './constants';
                                 'x-dead-letter-routing-key': 'fleet.failed',
                             },
                         },
+                        // Emit to Topic Exchange for audit interception
+                        exchange: 'logiflow_events',
+                        exchangeType: 'topic',
                     },
                 }),
                 inject: [ConfigService],

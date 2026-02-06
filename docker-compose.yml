@@ -85,6 +85,20 @@ services:
     networks:
       - microservices-network
 
+  postgres-notification:
+    image: postgres:16-alpine
+    container_name: microservices-postgres-notification
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: notification_db
+    ports:
+      - "5438:5432"
+    volumes:
+      - notification_postgres_data:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: microservices-rabbitmq
@@ -105,6 +119,7 @@ volumes:
   fleet_postgres_data:
   inventory_postgres_data:
   billing_postgres_data:
+  notification_postgres_data:
   tracking_postgres_data:
   rabbitmq_data:
 

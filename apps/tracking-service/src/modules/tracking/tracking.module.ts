@@ -24,10 +24,13 @@ import { Ruta } from './entities/ruta.entity';
                             configService.get('RABBITMQ_URL') ||
                             'amqp://admin:admin@localhost:5672',
                         ],
-                        queue: 'events_queue',
+                        queue: 'tracking_events_queue',
                         queueOptions: {
                             durable: true,
                         },
+                        // Emit to Topic Exchange for audit interception
+                        exchange: 'logiflow_events',
+                        exchangeType: 'topic',
                     },
                 }),
             },

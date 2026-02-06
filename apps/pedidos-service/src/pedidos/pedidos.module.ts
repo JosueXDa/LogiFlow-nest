@@ -21,10 +21,13 @@ import { PedidosRepository } from './repository/pedidos.repository';
           urls: [
             process.env.RABBITMQ_URL ?? 'amqp://admin:admin@localhost:5672',
           ],
-          queue: 'pedidos_events',
+          queue: 'pedidos_events_queue',
           queueOptions: {
             durable: true,
           },
+          // Emit to Topic Exchange
+          exchange: 'logiflow_events',
+          exchangeType: 'topic',
         },
       },
       {
