@@ -9,13 +9,21 @@ import {
 import {
   ApiTags,
   ApiOperation,
-  ApiBody, ApiParam, ApiResponse, ApiBearerAuth, ApiCookieAuth } from '@nestjs/swagger';
+  ApiBody,
+  ApiParam,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiCookieAuth,
+} from '@nestjs/swagger';
 import { Roles } from '../decorators/roles.decorator';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { MICROSERVICES_CLIENTS } from '../constans';
 import { AuthGuard } from '../guards/auth.guard';
-import { AsignarRepartidorDto, FinalizarAsignacionDto } from '../swagger/dto/fleet.dto';
+import {
+  AsignarRepartidorDto,
+  FinalizarAsignacionDto,
+} from '../swagger/dto/fleet.dto';
 
 @ApiTags('Fleet-Asignaciones')
 @ApiBearerAuth()
