@@ -10,6 +10,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { Roles } from '../decorators/roles.decorator';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { MICROSERVICES_CLIENTS } from '../constans';
@@ -20,10 +21,11 @@ export class RepartidorController {
   constructor(
     @Inject(MICROSERVICES_CLIENTS.FLEET_SERVICE)
     private readonly fleetServiceClient: ClientProxy,
-  ) {}
+  ) { }
 
   @Post()
   @UseGuards(AuthGuard)
+  @Roles('GERENTE', 'ADMIN')
   async create(@Body() createRepartidorDto: any) {
     return firstValueFrom(
       this.fleetServiceClient.send(
@@ -35,6 +37,7 @@ export class RepartidorController {
 
   @Get()
   @UseGuards(AuthGuard)
+  @Roles('GERENTE', 'ADMIN')
   async findAll(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
@@ -55,6 +58,7 @@ export class RepartidorController {
 
   @Get('disponibles')
   @UseGuards(AuthGuard)
+  @Roles('SUPERVISOR')
   async findDisponiblesPorZona(@Query('zonaId') zonaId: string) {
     return firstValueFrom(
       this.fleetServiceClient.send(
@@ -66,6 +70,7 @@ export class RepartidorController {
 
   @Get(':id')
   @UseGuards(AuthGuard)
+  @Roles('GERENTE', 'ADMIN', 'SUPERVISOR')
   async findOne(@Param('id') id: string) {
     return firstValueFrom(
       this.fleetServiceClient.send({ cmd: 'fleet.repartidor.findOne' }, { id }),
@@ -74,6 +79,7 @@ export class RepartidorController {
 
   @Patch(':id')
   @UseGuards(AuthGuard)
+  @Roles('GERENTE', 'ADMIN')
   async update(@Param('id') id: string, @Body() updateRepartidorDto: any) {
     return firstValueFrom(
       this.fleetServiceClient.send(
@@ -85,6 +91,7 @@ export class RepartidorController {
 
   @Patch(':id/estado')
   @UseGuards(AuthGuard)
+  @Roles('REPARTIDOR')
   async cambiarEstado(
     @Param('id') id: string,
     @Body() body: { estado: string; motivo?: string },
@@ -103,6 +110,7 @@ export class RepartidorController {
 
   @Delete(':id')
   @UseGuards(AuthGuard)
+  @Roles('GERENTE', 'ADMIN')
   async remove(@Param('id') id: string) {
     return firstValueFrom(
       this.fleetServiceClient.send({ cmd: 'fleet.repartidor.remove' }, { id }),

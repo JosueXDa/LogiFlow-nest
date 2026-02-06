@@ -4,6 +4,9 @@ import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { KpiDiarioType } from '../types';
 import { MICROSERVICES_CLIENTS } from '../../constans';
+import { Roles } from '../../decorators/roles.decorator';
+import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from '../../guards/auth.guard';
 
 @Resolver()
 export class BillingResolver {
@@ -13,6 +16,8 @@ export class BillingResolver {
     ) { }
 
     @Query(() => KpiDiarioType, { name: 'kpiDiario' })
+    @UseGuards(AuthGuard)
+    @Roles('SUPERVISOR', 'GERENTE', 'ADMIN')
     async getKpiDiario(
         @Args('fecha') fecha: string,
         @Args('zonaId', { nullable: true }) zonaId?: string

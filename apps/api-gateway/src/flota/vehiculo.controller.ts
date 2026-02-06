@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { Roles } from '../decorators/roles.decorator';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { MICROSERVICES_CLIENTS } from '../constans';
@@ -19,10 +20,11 @@ export class VehiculoController {
   constructor(
     @Inject(MICROSERVICES_CLIENTS.FLEET_SERVICE)
     private readonly fleetServiceClient: ClientProxy,
-  ) {}
+  ) { }
 
   @Post()
   @UseGuards(AuthGuard)
+  @Roles('GERENTE', 'ADMIN')
   async create(@Body() createVehiculoDto: any) {
     return firstValueFrom(
       this.fleetServiceClient.send(
@@ -34,6 +36,7 @@ export class VehiculoController {
 
   @Get()
   @UseGuards(AuthGuard)
+  @Roles('GERENTE', 'ADMIN')
   async findAll(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
@@ -55,6 +58,7 @@ export class VehiculoController {
 
   @Get('disponibles')
   @UseGuards(AuthGuard)
+  @Roles('SUPERVISOR')
   async findDisponiblesPorTipo(@Query('tipo') tipo: string) {
     return firstValueFrom(
       this.fleetServiceClient.send(
@@ -66,6 +70,7 @@ export class VehiculoController {
 
   @Get(':id')
   @UseGuards(AuthGuard)
+  @Roles('GERENTE', 'ADMIN')
   async findOne(@Param('id') id: string) {
     return firstValueFrom(
       this.fleetServiceClient.send({ cmd: 'fleet.vehiculo.findOne' }, { id }),
@@ -74,6 +79,7 @@ export class VehiculoController {
 
   @Patch(':id')
   @UseGuards(AuthGuard)
+  @Roles('GERENTE', 'ADMIN')
   async update(@Param('id') id: string, @Body() updateVehiculoDto: any) {
     return firstValueFrom(
       this.fleetServiceClient.send(

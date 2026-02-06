@@ -1,11 +1,13 @@
 import { Resolver, Query, Args, ResolveField, Parent } from '@nestjs/graphql';
-import { Inject } from '@nestjs/common';
+import { Inject, UseGuards } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { FlotaActivaType, RepartidorType, VehiculoType, ZonaType } from '../types';
 import { MICROSERVICES_CLIENTS } from '../../constans';
 import { VehiculoLoader } from '../loaders/vehiculo.loader';
 import { ZonaLoader } from '../loaders/zona.loader';
+import { Roles } from '../../decorators/roles.decorator';
+import { AuthGuard } from '../../guards/auth.guard';
 
 // ====== RESOLVER PARA REPARTIDOR ======
 @Resolver(() => RepartidorType)
@@ -173,6 +175,8 @@ export class FleetResolver {
     ) { }
 
     @Query(() => FlotaActivaType, { name: 'flotaActiva' })
+    @UseGuards(AuthGuard)
+    @Roles('SUPERVISOR', 'GERENTE', 'ADMIN')
     async getFlotaActiva(@Args('zonaId') zonaId: string) {
         try {
             const res = await firstValueFrom(
