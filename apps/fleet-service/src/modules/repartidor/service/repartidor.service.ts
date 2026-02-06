@@ -4,12 +4,15 @@ import { CreateRepartidorDto, UpdateRepartidorDto, FindRepartidoresDto } from '.
 import { EstadoRepartidor } from '../../../common/enums';
 import { FleetEventPublisher } from '../../events/publishers/fleet-event.publisher';
 import { RepartidorRepository } from '../repository/repartidor.repository';
+import { RpcException } from '@nestjs/microservices';
+import { VehiculoService } from '../../vehiculo/service/vehiculo.service';
 
 @Injectable()
 export class RepartidorService {
     constructor(
         private readonly repartidorRepository: RepartidorRepository,
         private readonly eventPublisher: FleetEventPublisher,
+        private readonly vehiculoService: VehiculoService,
     ) { }
 
     async create(dto: CreateRepartidorDto): Promise<Repartidor> {
@@ -42,7 +45,7 @@ export class RepartidorService {
             email: saved.email,
             telefono: saved.telefono,
             zonaId: saved.zonaId,
-            vehiculoId: saved.vehiculoId,
+            vehiculoId: saved.vehiculo?.id,
         });
 
         return saved;
@@ -90,6 +93,13 @@ export class RepartidorService {
     async update(id: string, dto: UpdateRepartidorDto): Promise<Repartidor> {
         const repartidor = await this.findOne(id);
 
+        // Manejar vehiculoId si viene en el DTO
+        if (dto.vehiculoId) {
+            const vehiculo = await this.vehiculoService.findOne(dto.vehiculoId);
+            repartidor.vehiculo = vehiculo;
+            delete dto.vehiculoId; // No asignar directamente
+        }
+
         Object.assign(repartidor, dto);
 
         return this.repartidorRepository.save(repartidor);
@@ -122,7 +132,7 @@ export class RepartidorService {
         await this.repartidorRepository.softDelete(id);
     }
 
-    async findDisponiblesPorZona(zonaId: string): Promise<Repartidor[]> {
+    async findDisponiblesPorZona(zonaId?: string): Promise<Repartidor[]> {
         return this.repartidorRepository.findDisponiblesPorZona(zonaId);
     }
 }

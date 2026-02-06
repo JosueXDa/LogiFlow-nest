@@ -7,6 +7,8 @@ import {
   Patch,
   Post,
   UseGuards,
+  OnModuleInit,
+  Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiParam, ApiResponse, ApiBearerAuth, ApiCookieAuth } from '@nestjs/swagger';
 import { Roles } from '../decorators/roles.decorator';
@@ -20,11 +22,22 @@ import { CreatePedidoDto, CancelPedidoDto, UpdateEstadoDto } from '../swagger/dt
 @ApiBearerAuth()
 @ApiCookieAuth()
 @Controller('pedidos')
-export class PedidosController {
+export class PedidosController implements OnModuleInit {
+  private readonly logger = new Logger(PedidosController.name);
+
   constructor(
     @Inject(MICROSERVICES_CLIENTS.PEDIDOS_SERVICE)
     private pedidosServiceClient: ClientProxy,
   ) { }
+
+  async onModuleInit() {
+    try {
+      await this.pedidosServiceClient.connect();
+      this.logger.log('✅ Connected to Pedidos Service');
+    } catch (error) {
+      this.logger.error('❌ Failed to connect to Pedidos Service:', error.message);
+    }
+  }
 
   @Post()
   @UseGuards(AuthGuard)
@@ -34,9 +47,19 @@ export class PedidosController {
   @ApiResponse({ status: 201, description: 'Pedido creado exitosamente' })
   @ApiResponse({ status: 400, description: 'Datos de entrada inválidos' })
   async createPedido(@Body() createPedidoDto: CreatePedidoDto) {
-    return firstValueFrom(
-      this.pedidosServiceClient.send('create_pedido', createPedidoDto),
-    );
+    this.logger.log('📝 Creating pedido...');
+    this.logger.debug('DTO:', JSON.stringify(createPedidoDto));
+    
+    try {
+      const result = await firstValueFrom(
+        this.pedidosServiceClient.send('create_pedido', createPedidoDto),
+      );
+      this.logger.log('✅ Pedido created successfully');
+      return result;
+    } catch (error) {
+      this.logger.error('❌ Error creating pedido:', error.message);
+      throw error;
+    }
   }
 
   @Get(':id')

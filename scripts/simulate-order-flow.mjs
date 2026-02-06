@@ -2,6 +2,29 @@ const API_GATEWAY_URL = 'http://localhost:3009';
 
 // Same auth logic
 async function login() {
+    const credentials = {
+        email: 'admin@logiflow.com',
+        password: 'Admin123!',
+        name: 'Admin Sistema',
+        role: 'ADMIN'
+    };
+
+    console.log('📝 Verificando usuario admin...');
+    const responseRegister = await fetch(`${API_GATEWAY_URL}/api/auth/sign-up/email`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Origin': 'http://localhost:3000'
+        },
+        body: JSON.stringify(credentials)
+    });
+
+    if (responseRegister.ok) {
+        console.log('✅ Usuario admin creado.');
+    } else if (responseRegister.status === 409 || responseRegister.status === 400) {
+        console.log('ℹ️  Usuario admin ya existe.');
+    }
+
     console.log('🔑 Iniciando sesión...');
     const responseAuth = await fetch(`${API_GATEWAY_URL}/api/auth/sign-in/email`, {
         method: 'POST',
@@ -10,12 +33,12 @@ async function login() {
             'Origin': 'http://localhost:3000'
         },
         body: JSON.stringify({
-            email: 'abel@test.com',
-            password: 'abell123'
+            email: credentials.email,
+            password: credentials.password
         })
     });
 
-    if (!responseAuth.ok) throw new Error('Login failed');
+    if (!responseAuth.ok) throw new Error('Login failed: ' + await responseAuth.text());
 
     let rawCookies = responseAuth.headers.getSetCookie
         ? responseAuth.headers.getSetCookie().join('; ')
@@ -37,14 +60,31 @@ async function simulate() {
             'Origin': 'http://localhost:3000'
         };
 
+        // Get admin user info
+        console.log('\n👤 Getting admin user info...');
+        const userRes = await fetch(`${API_GATEWAY_URL}/api/auth/session`, {
+            headers: { 'Cookie': cookies }
+        });
+        if (!userRes.ok) throw new Error('Failed to get session');
+        const userData = await userRes.json();
+        const clienteId = userData.user.id;
+        console.log(`✅ Admin ID: ${clienteId}`);
+
+        // Get products from inventory
+        console.log('\n📦 Fetching products...');
+        const productsRes = await fetch(`${API_GATEWAY_URL}/inventory/products`, { headers });
+        if (!productsRes.ok) throw new Error('Failed to fetch products');
+        const products = await productsRes.json();
+        console.log(`✅ Found ${products.length} products`);
+
         // 1. CREATE PEDIDO
         console.log('\n📝 Creando pedido...');
         const createPayload = {
-            clienteId: '550e8400-e29b-41d4-a716-446655440000', // UUID Dummy
-            tipoVehiculo: 'MOTORIZADO',
+            clienteId: clienteId, // Real alphanumeric admin ID
+            tipoVehiculo: 'MOTO', // Changed from MOTORIZADO to MOTO
             items: [
-                { productoId: 'PROD-001', cantidad: 1 },
-                { productoId: 'PROD-002', cantidad: 2 }
+                { productoId: products[0].id, cantidad: 2 }, // Use real product UUID
+                { productoId: products[1].id, cantidad: 1 }
             ],
             origen: { direccion: 'Calle 1', lat: -0.182, lng: -78.482 },
             destino: { direccion: 'Calle 2', lat: -0.185, lng: -78.485 }

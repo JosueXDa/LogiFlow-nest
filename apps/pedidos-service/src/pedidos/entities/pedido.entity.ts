@@ -10,6 +10,7 @@ import { ItemPedido } from './item-pedido.entity';
 
 export enum PedidoEstado {
   PENDIENTE = 'PENDIENTE',
+  CONFIRMADO = 'CONFIRMADO',
   ASIGNADO = 'ASIGNADO',
   EN_RUTA = 'EN_RUTA',
   ENTREGADO = 'ENTREGADO',
@@ -27,10 +28,10 @@ export class Pedido {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'varchar', length: 255 })
   clienteId: string;
 
-  @Column({ type: 'uuid', nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   repartidorId: string | null;
 
   @Column({

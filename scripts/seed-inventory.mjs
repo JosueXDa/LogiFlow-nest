@@ -1,5 +1,4 @@
 const API_GATEWAY_URL = 'http://localhost:3009';
-const AUTH_COOKIE = "better-auth.session_token=25ym36GnrrgeHp3xDY1fAPoHcbmzrLSu";
 
 const products = [
     {
@@ -87,42 +86,65 @@ const products = [
 async function seed() {
     console.log(`🚀 Iniciando proceso de seed a ${API_GATEWAY_URL}...`);
 
-    // 1. INICIAR SESIÓN
+    const credentials = {
+        email: 'admin@logiflow.com',
+        password: 'Admin123!',
+        name: 'Admin Sistema',
+        role: 'ADMIN'
+    };
+
+    // 1. INTENTAR REGISTRO (si el usuario no existe)
+    console.log('📝 Verificando usuario admin...');
+    const responseRegister = await fetch(`${API_GATEWAY_URL}/api/auth/sign-up/email`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Origin': 'http://localhost:3000'
+        },
+        body: JSON.stringify(credentials)
+    });
+
+    if (responseRegister.ok) {
+        console.log('✅ Usuario admin creado.');
+    } else if (responseRegister.status === 409 || responseRegister.status === 400) {
+        const error = await responseRegister.json().catch(() => ({}));
+        console.log('⚠️  Usuario admin ya existe.');
+    } else {
+        const errorText = await responseRegister.text();
+        console.warn('⚠️  Error al registrar:', errorText);
+    }
+
+    // 2. INICIAR SESIÓN
     const responseAuth = await fetch(`${API_GATEWAY_URL}/api/auth/sign-in/email`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            // Importante: Fingir un Origin válido para que el servidor acepte la petición
             'Origin': 'http://localhost:3000'
         },
         body: JSON.stringify({
-            email: 'abel@test.com',
-            password: 'abell123'
+            email: credentials.email,
+            password: credentials.password
         })
-    });
+    });4
 
     if (!responseAuth.ok) {
         console.error('❌ Error al iniciar sesión:', await responseAuth.text());
+        console.error('💡 Asegúrate de que el API Gateway esté corriendo en', API_GATEWAY_URL);
         process.exit(1);
     }
 
-    // 2. OBTENER LA COOKIE REAL DEL HEADER (LA CLAVE DEL ÉXITO)
-    // Node >= 18 usa getSetCookie() para obtener array, o get('set-cookie') para string
-    // Better Auth puede enviar varias cookies, las unimos para asegurarnos.
+    const authData = await responseAuth.json();
     let rawCookies = responseAuth.headers.getSetCookie
         ? responseAuth.headers.getSetCookie().join('; ')
         : responseAuth.headers.get('set-cookie');
 
-    if (!rawCookies) {
-        console.error('❌ Error: El servidor no devolvió cookies en el header Set-Cookie.');
-        // Fallback de emergencia por si tu versión de Better Auth devuelve el token plano en body
-        // pero esto suele fallar si la cookie requiere firma.
-        const body = await responseAuth.json();
-        console.log('Intentando fallback con token del body...');
-        rawCookies = `better-auth.session_token=${body.token}`;
+    // Si no hay cookies en los headers, usar el token del body
+    if (!rawCookies || !rawCookies.includes('better_auth.session_token')) {
+        rawCookies = `better_auth.session_token=${authData.token}`;
+        console.log('🔑 Token extraído:', authData.token);
     }
 
-    console.log('✅ Sesión iniciada. Usando cookies:', rawCookies.substring(0, 20) + '...');
+    console.log('✅ Sesión iniciada. Usando cookies:', rawCookies.substring(0, 30) + '...');
 
     // 3. CREAR PRODUCTOS
     for (const product of products) {

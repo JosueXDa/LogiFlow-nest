@@ -21,4 +21,5 @@ export interface IPedidosService {
   }): Promise<void>;
   handleEntregaCompletada(payload: { pedidoId: string; fecha: Date }): Promise<void>;
   confirmPedido(id: string): Promise<Pedido>;
+  updatePrecioTotal(pedidoId: string, precioTotal: number): Promise<void>;
 }

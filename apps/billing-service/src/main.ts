@@ -13,7 +13,7 @@ async function bootstrap() {
     transport: Transport.TCP,
     options: {
       host: process.env.TCP_HOST || '0.0.0.0',
-      port: 3010,
+      port: parseInt(process.env.TCP_PORT || '4007'),
       retryAttempts: 5,
       retryDelay: 3000,
     },
@@ -28,11 +28,6 @@ async function bootstrap() {
       prefetchCount: 1,
       queueOptions: {
         durable: true,
-        arguments: {
-          'x-message-ttl': 86400000,
-          'x-dead-letter-exchange': 'dlx.billing',
-          'x-dead-letter-routing-key': 'billing.failed',
-        },
       },
     },
   });
@@ -54,7 +49,7 @@ async function bootstrap() {
   );
 
   await app.startAllMicroservices();
-  logger.log(`🚀 TCP Microservice listening on port ${process.env.TCP_PORT || 3004}`);
+  logger.log(`🚀 TCP Microservice listening on port ${process.env.TCP_PORT || 4007}`);
   logger.log(`🐰 RabbitMQ connected to billing_queue`);
 }
 

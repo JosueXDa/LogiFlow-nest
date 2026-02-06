@@ -11,10 +11,13 @@ async function bootstrap() {
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.TCP,
     options: {
+      host: '127.0.0.1',
       port: 4004,
+      retryAttempts: 5,
+      retryDelay: 3000,
     },
   });
-  logger.log('🔌 TCP Microservice listening on port 4004');
+  logger.log('🔌 TCP Microservice listening on 127.0.0.1:4004');
 
   // RabbitMQ para eventos
   app.connectMicroservice<MicroserviceOptions>({
@@ -34,13 +37,26 @@ async function bootstrap() {
     transport: Transport.RMQ,
     options: {
       urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672'],
-      queue: 'fleet_events',
+      queue: 'fleet_events_queue',
       queueOptions: {
         durable: true,
       },
     },
   });
-  logger.log('🐰 RabbitMQ connected - Queue: fleet_events');
+  logger.log('🐰 RabbitMQ connected - Queue: fleet_events_queue');
+
+  // RabbitMQ para escuchar eventos de Billing
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: [process.env.RABBITMQ_URL || 'amqp://admin:admin@localhost:5672'],
+      queue: 'billing_events_queue',
+      queueOptions: {
+        durable: true,
+      },
+    },
+  });
+  logger.log('🐰 RabbitMQ connected - Queue: billing_events_queue');
 
   app.useGlobalPipes(
     new ValidationPipe({

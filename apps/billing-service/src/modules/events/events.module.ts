@@ -31,10 +31,12 @@ import { BillingModule } from '../billing/billing.module';
         ]),
         BillingModule,
     ],
-    providers: [
+    controllers: [
         PedidoEventsConsumer,
         EntregaEventsConsumer,
         TrackingEventsConsumer,
+    ],
+    providers: [
         BillingEventsProducer,
     ],
     exports: [BillingEventsProducer],

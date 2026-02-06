@@ -1,16 +1,19 @@
-import { Module, Global } from '@nestjs/common';
+import { Module, Global, forwardRef } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FleetEventPublisher } from './publishers/fleet-event.publisher';
 import { TrackingEventsConsumer } from './consumers/tracking-events.consumer';
+import { PedidoEventsConsumer } from './consumers/pedido-events.consumer';
 import { Repartidor } from '../repartidor/entities/repartidor.entity';
+import { AsignacionModule } from '../asignacion/asignacion.module';
 import { FLEET_EVENT_CLIENT } from './constants';
 
 @Global()
 @Module({
     imports: [
         TypeOrmModule.forFeature([Repartidor]),
+        forwardRef(() => AsignacionModule),
         ClientsModule.registerAsync([
             {
                 name: FLEET_EVENT_CLIENT,
@@ -22,22 +25,14 @@ import { FLEET_EVENT_CLIENT } from './constants';
                         queue: 'fleet_events_queue',
                         queueOptions: {
                             durable: true,
-                            arguments: {
-                                'x-message-ttl': 86400000,
-                                'x-dead-letter-exchange': 'dlx.fleet',
-                                'x-dead-letter-routing-key': 'fleet.failed',
-                            },
                         },
-                        // Emit to Topic Exchange for audit interception
-                        exchange: 'logiflow_events',
-                        exchangeType: 'topic',
                     },
                 }),
                 inject: [ConfigService],
             },
         ]),
     ],
-    controllers: [TrackingEventsConsumer],
+    controllers: [TrackingEventsConsumer, PedidoEventsConsumer],
     providers: [FleetEventPublisher],
     exports: [FleetEventPublisher, ClientsModule],
 })

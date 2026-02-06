@@ -45,7 +45,8 @@ export class ItemPedidoDto {
 }
 
 export class CreatePedidoDto {
-  @IsUUID()
+  @IsString()
+  @IsNotEmpty()
   clienteId: string;
 
   @IsObject()

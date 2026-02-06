@@ -43,17 +43,31 @@ export class AsignacionService {
         // 1. Obtener repartidores disponibles en la zona
         const repartidores = await this.repartidorService.findDisponiblesPorZona(dto.zonaId);
 
+        this.logger.log(`📋 Encontrados ${repartidores.length} repartidores disponibles`);
+        
         if (repartidores.length === 0) {
             throw new RpcException('No hay repartidores disponibles en la zona');
         }
 
+        // Log detalles de cada repartidor
+        repartidores.forEach(rep => {
+            this.logger.debug(
+                `   Repartidor: ${rep.nombre}, ` +
+                `Vehículo: ${rep.vehiculo?.tipo || 'N/A'}, ` +
+                `Capacidad: ${rep.vehiculo?.capacidadKg || 0}kg/${rep.vehiculo?.capacidadM3 || 0}m3`
+            );
+        });
+
         // 2. Seleccionar estrategia
         const strategy = this.getStrategy(dto.tipoEntrega);
+        this.logger.log(`📐 Usando estrategia: ${dto.tipoEntrega}`);
+        this.logger.log(`📦 Pedido requiere: ${dto.pesoKg}kg / ${dto.volumenM3}m3`);
 
         // 3. Ejecutar algoritmo de asignación
         const repartidorSeleccionado = strategy.asignarRepartidor(dto, repartidores);
 
         if (!repartidorSeleccionado) {
+            this.logger.error('❌ Ningún repartidor pasó el filtro de compatibilidad');
             throw new RpcException('No se encontro un repartidor compatible para el pedido');
         }
 
@@ -78,7 +92,7 @@ export class AsignacionService {
             asignacionId: saved.id,
             pedidoId: saved.pedidoId,
             repartidorId: saved.repartidorId,
-            vehiculoId: repartidorSeleccionado.vehiculoId,
+            vehiculoId: repartidorSeleccionado.vehiculo?.id,
             tipoVehiculo: repartidorSeleccionado.vehiculo?.tipo,
             zonaId: dto.zonaId,
             distanciaKm: saved.distanciaKm,

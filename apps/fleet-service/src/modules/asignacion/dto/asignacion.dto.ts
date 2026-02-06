@@ -16,8 +16,9 @@ export class AsignarRepartidorDto {
     @IsEnum(TipoEntrega)
     tipoEntrega: TipoEntrega;
 
+    @IsOptional()
     @IsUUID()
-    zonaId: string;
+    zonaId?: string;
 
     @IsNumber()
     @Min(0)

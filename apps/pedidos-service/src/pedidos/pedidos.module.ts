@@ -5,6 +5,8 @@ import { Pedido, ItemPedido } from './entities';
 import { PedidosController } from './pedidos.controller';
 import { PedidosEventsController } from './pedidos-events.controller';
 import { TrackingEventsConsumer } from './consumers/tracking-events.consumer';
+import { BillingEventsConsumer } from './consumers/billing-events.consumer';
+import { FleetEventsConsumer } from './consumers/fleet-events.consumer';
 import { PEDIDOS_EVENT_CLIENT, INVENTORY_CLIENT, FLEET_CLIENT } from './pedidos.constants';
 import { PedidosService } from './service/impl/pedidos.service';
 import { PEDIDOS_SERVICE } from './service/pedidos-service.interface';
@@ -21,13 +23,11 @@ import { PedidosRepository } from './repository/pedidos.repository';
           urls: [
             process.env.RABBITMQ_URL ?? 'amqp://admin:admin@localhost:5672',
           ],
-          queue: 'pedidos_events_queue',
+          // Cola directa para eventos de pedidos
+          queue: 'billing_queue',
           queueOptions: {
             durable: true,
           },
-          // Emit to Topic Exchange
-          exchange: 'logiflow_events',
-          exchangeType: 'topic',
         },
       },
       {
@@ -58,7 +58,7 @@ import { PedidosRepository } from './repository/pedidos.repository';
       },
     ]),
   ],
-  controllers: [PedidosController, PedidosEventsController, TrackingEventsConsumer],
+  controllers: [PedidosController, PedidosEventsController, TrackingEventsConsumer, BillingEventsConsumer, FleetEventsConsumer],
   providers: [
     {
       provide: PEDIDOS_SERVICE,

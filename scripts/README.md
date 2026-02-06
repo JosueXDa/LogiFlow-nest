@@ -76,6 +76,17 @@ chmod +x scripts/clear-all-databases.sh
 
 ### 🌱 Scripts de Seed (Población de Datos)
 
+**NOTA IMPORTANTE:** Todos los scripts de seed requieren autenticación. Los scripts automáticamente crean un usuario administrador si no existe:
+
+**Credenciales del Admin:**
+- **Email:** `admin@logiflow.com`
+- **Password:** `Admin123!`
+- **Role:** `ADMIN`
+
+Este usuario tiene permisos para crear todos los recursos del sistema (productos, repartidores, vehículos, zonas, etc.).
+
+---
+
 #### `seed-fleet.mjs`
 Puebla la base de datos de Fleet Service con datos de prueba.
 
@@ -86,10 +97,18 @@ node scripts/seed-fleet.mjs
 pnpm seed:fleet
 ```
 
+**Requisitos:**
+- API Gateway corriendo en `localhost:3009`
+- Fleet Service conectado al API Gateway
+- PostgreSQL corriendo
+
 **Crea:**
-- 20 repartidores de diferentes tipos
-- 20 vehículos (motorizados, autos, camiones)
-- 5 zonas de cobertura
+- 1 usuario ADMIN (si no existe)
+- 3 zonas de cobertura (Quito Norte, Quito Sur, Valle de los Chillos)
+- 3 vehículos (motorizados, autos, camiones)
+- 3 repartidores asignados a diferentes zonas
+
+**Nota:** Las zonas se crean primero porque los repartidores requieren una zona válida (foreign key).
 
 ---
 
@@ -103,12 +122,84 @@ node scripts/seed-inventory.mjs
 pnpm seed:inventory
 ```
 
+**Requisitos:**
+- API Gateway corriendo en `localhost:3009`
+- Inventory Service conectado al API Gateway
+- PostgreSQL corriendo
+
 **Crea:**
-- 50 productos variados con stock
+- 1 usuario ADMIN (si no existe)
+- 10 productos variados con stock (laptops, monitores, accesorios, etc.)
 
 ---
 
-### 🔄 Scripts de Simulación
+#### `seed-billing.mjs`
+Puebla la base de datos de Billing Service con tarifas de transporte.
+
+**Uso:**
+```bash
+node scripts/seed-billing.mjs
+# o
+pnpm seed:billing
+```
+
+**Requisitos:**
+- API Gateway corriendo en `localhost:3009`
+- Billing Service conectado al API Gateway
+- PostgreSQL corriendo
+
+**Crea:**
+- 1 usuario ADMIN (si no existe)
+- 3 tarifas:
+  * **Urbana Motorizado**: $2.50 base + $0.50/km
+  * **Urbana Vehículo Liviano**: $5.00 base + $0.80/km
+  * **Intermunicipal Camión**: $50.00 base + $1.20/km + $0.10/kg
+
+**Nota:** Las tarifas son necesarias para calcular costos de envío y generar facturas. Sin tarifas, los cálculos de precios fallarán.
+
+---
+
+### � Scripts de Migración
+
+#### `migrate-auth-to-uuid.mjs`
+Migra los IDs de usuarios de Better Auth de strings alfanuméricos a UUIDs estándar.
+
+**Uso:**
+```bash
+bun scripts/migrate-auth-to-uuid.mjs
+# o
+pnpm migrate:auth:uuid
+```
+
+**Requisitos:**
+- PostgreSQL corriendo con `auth_db`
+- Auth Service detenido (para evitar conflictos)
+
+**¿Qué hace?**
+1. 🔍 Lee todos los usuarios existentes de `auth_db`
+2. 🆔 Genera un UUID único para cada usuario
+3. 🔄 Actualiza las referencias en todas las tablas relacionadas:
+   - `session` (campo `userId`)
+   - `account` (campo `userId`)
+   - `verification` (campo `userId` si existe)
+4. 💾 Actualiza los IDs de los usuarios
+5. 🔧 Modifica el esquema de la base de datos (columnas a tipo UUID)
+
+**⚠️ IMPORTANTE:**
+- Este script es **transaccional** - o se completa todo o no se aplica nada
+- Las sesiones existentes se invalidan durante la migración
+- Después de ejecutar, debes hacer **login nuevamente** para obtener nuevas sesiones con UUIDs
+- Ejecuta este script **solo una vez** después de cambiar la configuración de Better Auth
+- Asegúrate de tener un backup de `auth_db` antes de ejecutar
+
+**Resultado:**
+- ✅ Todos los IDs de usuarios ahora son UUIDs válidos (formato: `a1b2c3d4-e5f6-7890-abcd-ef1234567890`)
+- ✅ Compatible con campos `uuid` en otras bases de datos (pedidos, etc.)
+- ✅ Better Auth seguirá generando UUIDs para nuevos usuarios
+
+---
+
+### �🔄 Scripts de Simulación
 
 #### `simulate-order-flow.mjs`
 Simula un flujo completo de pedido desde la creación hasta la entrega.
@@ -119,6 +210,10 @@ node scripts/simulate-order-flow.mjs
 # o
 pnpm simulate:order
 ```
+
+**Requisitos:**
+- Todos los microservicios corriendo
+- Usuario ADMIN creado (se crea automáticamente si no existe)
 
 **Simula:**
 1. Creación de pedido

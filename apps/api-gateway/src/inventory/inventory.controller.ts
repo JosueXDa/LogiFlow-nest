@@ -4,6 +4,8 @@ import {
   Delete,
   Get,
   Inject,
+  Logger,
+  OnModuleInit,
   Param,
   Patch,
   Post,
@@ -27,11 +29,22 @@ import {
 @ApiBearerAuth()
 @ApiCookieAuth()
 @Controller('inventory')
-export class InventoryController {
+export class InventoryController implements OnModuleInit {
+  private readonly logger = new Logger(InventoryController.name);
+
   constructor(
     @Inject(MICROSERVICES_CLIENTS.INVENTORY_SERVICE)
     private inventoryServiceClient: ClientProxy,
   ) { }
+
+  async onModuleInit() {
+    try {
+      await this.inventoryServiceClient.connect();
+      this.logger.log('✅ Connected to Inventory Service');
+    } catch (error) {
+      this.logger.error('❌ Failed to connect to Inventory Service', error);
+    }
+  }
 
   // CRUD de Productos
   @Post('products')
@@ -41,9 +54,20 @@ export class InventoryController {
   @ApiBody({ type: CreateProductDto })
   @ApiResponse({ status: 201, description: 'Producto creado exitosamente' })
   async createProduct(@Body() createProductDto: CreateProductDto) {
-    return firstValueFrom(
-      this.inventoryServiceClient.send('create_product', createProductDto),
-    );
+    try {
+      this.logger.log('📝 Creating product...');
+      this.logger.debug(`Product data: ${JSON.stringify(createProductDto)}`);
+      
+      const result = await firstValueFrom(
+        this.inventoryServiceClient.send('create_product', createProductDto),
+      );
+      
+      this.logger.log(`✅ Product created: ${result.id}`);
+      return result;
+    } catch (error) {
+      this.logger.error('❌ Failed to create product', error);
+      throw error;
+    }
   }
 
   @Get('products')
