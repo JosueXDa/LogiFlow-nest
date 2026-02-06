@@ -1,4 +1,4 @@
-import { Resolver, Query, Args, ResolveField, Parent, Int } from '@nestjs/graphql';
+import { Resolver, Query, Args, ResolveField, Parent, Int, InputType, Field } from '@nestjs/graphql';
 import { Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
@@ -8,6 +8,16 @@ import { RepartidorLoader } from '../loaders/repartidor.loader';
 import { Roles } from '../../decorators/roles.decorator';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../../guards/auth.guard';
+
+// InputType debe estar antes de ser usado
+@InputType()
+class PedidosFilterInput {
+    @Field({ nullable: true })
+    zonaId?: string;
+
+    @Field({ nullable: true })
+    estado?: string;
+}
 
 @Resolver(() => PedidoType)
 export class PedidosResolver {
@@ -99,15 +109,4 @@ export class PedidosResolver {
             return null;
         }
     }
-}
-
-import { InputType, Field } from '@nestjs/graphql';
-
-@InputType()
-class PedidosFilterInput {
-    @Field({ nullable: true })
-    zonaId?: string;
-
-    @Field({ nullable: true })
-    estado?: string;
 }

@@ -10,7 +10,9 @@
     "check-types": "turbo run check-types",
     "seed:inventory": "bun scripts/seed-inventory.mjs",
     "seed:fleet": "bun scripts/seed-fleet.mjs",
-    "simulate:order": "bun scripts/simulate-order-flow.mjs"
+    "simulate:order": "bun scripts/simulate-order-flow.mjs",
+    "db:clear": "node scripts/clear-all-databases.mjs",
+    "db:clear:ps": "powershell -ExecutionPolicy Bypass -File scripts/clear-all-databases.ps1"
   },
   "devDependencies": {
     "prettier": "^3.7.4",
@@ -20,5 +22,8 @@
   "packageManager": "pnpm@9.0.0",
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "pg": "^8.17.2"
   }
 }

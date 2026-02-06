@@ -1,18 +1,102 @@
 import { Field, ObjectType, ID, Float, Int } from '@nestjs/graphql';
 
+// ====== ZONA ======
 @ObjectType()
-export class VehiculoType {
-    @Field()
-    tipo: string;
-}
+export class ZonaType {
+    @Field(() => ID)
+    id: string;
 
-@ObjectType()
-export class RepartidorType {
     @Field()
     nombre: string;
 
-    @Field(() => VehiculoType)
-    vehiculo: VehiculoType;
+    @Field({ nullable: true })
+    descripcion?: string;
+
+    @Field({ nullable: true })
+    coordenadas?: string;
+
+    @Field(() => Int, { nullable: true })
+    totalRepartidores?: number;
+}
+
+// ====== VEHICULO ======
+@ObjectType()
+export class VehiculoType {
+    @Field(() => ID)
+    id: string;
+
+    @Field()
+    tipo: string;
+
+    @Field()
+    placa: string;
+
+    @Field()
+    marca: string;
+
+    @Field()
+    modelo: string;
+
+    @Field(() => Int, { name: 'anio' })
+    año: number;
+
+    @Field()
+    color: string;
+
+    @Field()
+    estado: string;
+
+    @Field(() => Float)
+    capacidadKg: number;
+
+    @Field(() => Float)
+    capacidadM3: number;
+
+    @Field(() => Int)
+    kilometraje: number;
+
+    @Field(() => Float, { nullable: true })
+    cargaActualKg?: number;
+
+    @Field(() => Float, { nullable: true })
+    volumenActualM3?: number;
+}
+
+// ====== REPARTIDOR ======
+@ObjectType()
+export class RepartidorType {
+    @Field(() => ID)
+    id: string;
+
+    @Field()
+    nombre: string;
+
+    @Field()
+    apellido: string;
+
+    @Field()
+    cedula: string;
+
+    @Field()
+    telefono: string;
+
+    @Field()
+    email: string;
+
+    @Field()
+    licencia: string;
+
+    @Field()
+    tipoLicencia: string;
+
+    @Field()
+    estado: string;
+
+    @Field(() => VehiculoType, { nullable: true })
+    vehiculo?: VehiculoType;
+
+    @Field(() => ZonaType, { nullable: true })
+    zona?: ZonaType;
 }
 
 @ObjectType()
