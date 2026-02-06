@@ -1,10 +1,170 @@
-import { Resolver, Query, Args } from '@nestjs/graphql';
+import { Resolver, Query, Args, ResolveField, Parent } from '@nestjs/graphql';
 import { Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-import { FlotaActivaType } from '../types';
+import { FlotaActivaType, RepartidorType, VehiculoType, ZonaType } from '../types';
 import { MICROSERVICES_CLIENTS } from '../../constans';
+import { VehiculoLoader } from '../loaders/vehiculo.loader';
+import { ZonaLoader } from '../loaders/zona.loader';
 
+// ====== RESOLVER PARA REPARTIDOR ======
+@Resolver(() => RepartidorType)
+export class RepartidorResolver {
+    constructor(
+        @Inject(MICROSERVICES_CLIENTS.FLEET_SERVICE)
+        private readonly fleetClient: ClientProxy,
+        private readonly vehiculoLoader: VehiculoLoader,
+        private readonly zonaLoader: ZonaLoader,
+    ) { }
+
+    @Query(() => [RepartidorType], { name: 'repartidores' })
+    async getRepartidores(
+        @Args('zonaId', { nullable: true }) zonaId?: string,
+        @Args('estado', { nullable: true }) estado?: string,
+    ) {
+        try {
+            const res = await firstValueFrom(
+                this.fleetClient.send({ cmd: 'fleet.repartidor.findAll' }, {
+                    filters: { zonaId, estado },
+                    limit: 1000,
+                })
+            );
+
+            if (!res.success) return [];
+            return res.data || [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    @Query(() => RepartidorType, { name: 'repartidor', nullable: true })
+    async getRepartidor(@Args('id') id: string) {
+        try {
+            const res = await firstValueFrom(
+                this.fleetClient.send({ cmd: 'fleet.repartidor.findOne' }, { id })
+            );
+
+            if (!res.success) return null;
+            return res.data;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // Resolver Field para Vehiculo (usa DataLoader)
+    @ResolveField(() => VehiculoType, { nullable: true })
+    async vehiculo(@Parent() repartidor: any) {
+        if (!repartidor.vehiculoId) return null;
+        return this.vehiculoLoader.batchVehiculos.load(repartidor.vehiculoId);
+    }
+
+    // Resolver Field para Zona (usa DataLoader)
+    @ResolveField(() => ZonaType, { nullable: true })
+    async zona(@Parent() repartidor: any) {
+        if (!repartidor.zonaId) return null;
+        return this.zonaLoader.batchZonas.load(repartidor.zonaId);
+    }
+}
+
+// ====== RESOLVER PARA VEHICULO ======
+@Resolver(() => VehiculoType)
+export class VehiculoResolver {
+    constructor(
+        @Inject(MICROSERVICES_CLIENTS.FLEET_SERVICE)
+        private readonly fleetClient: ClientProxy,
+    ) { }
+
+    @Query(() => [VehiculoType], { name: 'vehiculos' })
+    async getVehiculos(
+        @Args('tipo', { nullable: true }) tipo?: string,
+        @Args('estado', { nullable: true }) estado?: string,
+    ) {
+        try {
+            const res = await firstValueFrom(
+                this.fleetClient.send({ cmd: 'fleet.vehiculo.findAll' }, {
+                    filters: { tipo, estado },
+                    limit: 1000,
+                })
+            );
+
+            if (!res.success) return [];
+            return res.data || [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    @Query(() => VehiculoType, { name: 'vehiculo', nullable: true })
+    async getVehiculo(@Args('id') id: string) {
+        try {
+            const res = await firstValueFrom(
+                this.fleetClient.send({ cmd: 'fleet.vehiculo.findOne' }, { id })
+            );
+
+            if (!res.success) return null;
+            return res.data;
+        } catch (e) {
+            return null;
+        }
+    }
+}
+
+// ====== RESOLVER PARA ZONA ======
+@Resolver(() => ZonaType)
+export class ZonaResolver {
+    constructor(
+        @Inject(MICROSERVICES_CLIENTS.FLEET_SERVICE)
+        private readonly fleetClient: ClientProxy,
+    ) { }
+
+    @Query(() => [ZonaType], { name: 'zonas' })
+    async getZonas() {
+        try {
+            const res = await firstValueFrom(
+                this.fleetClient.send({ cmd: 'fleet.zona.findAll' }, {})
+            );
+
+            if (!res.success) return [];
+            return res.data || [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    @Query(() => ZonaType, { name: 'zona', nullable: true })
+    async getZona(@Args('id') id: string) {
+        try {
+            const res = await firstValueFrom(
+                this.fleetClient.send({ cmd: 'fleet.zona.findOne' }, { id })
+            );
+
+            if (!res.success) return null;
+            return res.data;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // Resolver Field para contar repartidores
+    @ResolveField(() => Number, { nullable: true })
+    async totalRepartidores(@Parent() zona: any) {
+        try {
+            const res = await firstValueFrom(
+                this.fleetClient.send({ cmd: 'fleet.repartidor.findAll' }, {
+                    filters: { zonaId: zona.id },
+                    limit: 1000,
+                })
+            );
+
+            if (!res.success) return 0;
+            return res.data?.length || 0;
+        } catch (e) {
+            return 0;
+        }
+    }
+}
+
+// ====== RESOLVER PARA FLOTA (KPIs) ======
 @Resolver()
 export class FleetResolver {
     constructor(
@@ -14,31 +174,24 @@ export class FleetResolver {
 
     @Query(() => FlotaActivaType, { name: 'flotaActiva' })
     async getFlotaActiva(@Args('zonaId') zonaId: string) {
-        // Necesito conteos.
-        // Opcion 1: Endpoint especifico en FleetService.
-        // Opcion 2: findAll con filtro zonaId, y contar acá.
-
         try {
-            // Usar findAll del FleetService
-            const res = await firstValueFrom(this.fleetClient.send({ cmd: 'fleet.repartidor.findAll' }, {
-                filters: { zonaId }, // Asumiendo que mi DTO soporta esto
-                limit: 1000 // Traer suficientes
-            }));
+            const res = await firstValueFrom(
+                this.fleetClient.send({ cmd: 'fleet.repartidor.findAll' }, {
+                    filters: { zonaId },
+                    limit: 1000,
+                })
+            );
 
-            if (!res.success) throw new Error(res.message);
+            if (!res.success) {
+                return { total: 0, disponibles: 0, enRuta: 0 };
+            }
 
-            const repartidores = res.data;
-
+            const repartidores = res.data || [];
             const total = repartidores.length;
             const disponibles = repartidores.filter((r: any) => r.estado === 'DISPONIBLE').length;
             const enRuta = repartidores.filter((r: any) => r.estado === 'EN_RUTA' || r.estado === 'OCUPADO').length;
 
-            return {
-                total,
-                disponibles,
-                enRuta
-            };
-
+            return { total, disponibles, enRuta };
         } catch (e) {
             return { total: 0, disponibles: 0, enRuta: 0 };
         }

@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      pg:
+        specifier: ^8.17.2
+        version: 8.17.2
     devDependencies:
       prettier:
         specifier: ^3.7.4
@@ -50,6 +54,9 @@ importers:
       '@nestjs/websockets':
         specifier: ^11.1.13
         version: 11.1.13(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(@nestjs/platform-socket.io@11.1.13)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      dataloader:
+        specifier: ^2.2.3
+        version: 2.2.3
       graphql:
         specifier: ^16.12.0
         version: 16.12.0
@@ -3033,6 +3040,9 @@ packages:
   data-view-byte-offset@1.0.1:
     resolution: {integrity: sha512-BS8PfmtDGnrgYdOonGZQdLZslWIeCGFP9tpan0hi1Co2Zr2NKADsvGYA8XxuG/4UWgJ6Cjtv+YJnB6MM69QGlQ==}
     engines: {node: '>= 0.4'}
+
+  dataloader@2.2.3:
+    resolution: {integrity: sha512-y2krtASINtPFS1rSDjacrFgn1dcUuoREVabwlOGOe4SdxenREqwjwjElAdwvbGM7kgZz9a3KVicWR7vcz8rnzA==}
 
   dayjs@1.11.19:
     resolution: {integrity: sha512-t5EcLVS6QPBNqM2z8fakk/NKel+Xzshgt8FFKAn+qwlD1pzZWxh0nVCrvFK7ZDb6XucZeF9z8C7CBWTRIVApAw==}
@@ -7977,6 +7987,8 @@ snapshots:
       call-bound: 1.0.4
       es-errors: 1.3.0
       is-data-view: 1.0.2
+
+  dataloader@2.2.3: {}
 
   dayjs@1.11.19: {}
 

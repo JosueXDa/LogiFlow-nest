@@ -1,0 +1,770 @@
+{
+  "info": {
+    "name": "LogiFlow API - Complete Testing",
+    "description": "Colección completa para testing de la API de LogiFlow (Fases 1 y 2)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3009",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "pedido_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "repartidor_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "vehiculo_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "factura_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Autenticación",
+      "item": [
+        {
+          "name": "Register Cliente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.session && jsonData.session.token) {",
+                  "        pm.collectionVariables.set('access_token', jsonData.session.token);",
+                  "        console.log('✅ Token guardado:', jsonData.session.token);",
+                  "    }",
+                  "    pm.test('Usuario creado exitosamente', () => {",
+                  "        pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Juan Pérez\",\n  \"email\": \"juan.perez@example.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"cliente\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/sign-up/email",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "sign-up", "email"]
+            },
+            "description": "Registro de nuevo usuario con rol cliente"
+          },
+          "response": []
+        },
+        {
+          "name": "Register Repartidor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Carlos Conductor\",\n  \"email\": \"carlos.conductor@example.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"repartidor\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/sign-up/email",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "sign-up", "email"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.session && jsonData.session.token) {",
+                  "        pm.collectionVariables.set('access_token', jsonData.session.token);",
+                  "        console.log('✅ Token guardado:', jsonData.session.token);",
+                  "    }",
+                  "    pm.test('Login exitoso', () => {",
+                  "        pm.response.to.have.status(200);",
+                  "        pm.expect(jsonData).to.have.property('user');",
+                  "        pm.expect(jsonData).to.have.property('session');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"juan.perez@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/sign-in/email",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "sign-in", "email"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Session",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/get-session",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "get-session"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Pedidos (Happy Path)",
+      "item": [
+        {
+          "name": "Calculate Tariff",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoEntrega\": \"urbana\",\n  \"distanciaKm\": 5.2,\n  \"peso\": 2.5,\n  \"fragil\": false,\n  \"zonaId\": \"ZONA-001\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/billing/calculate-tariff",
+              "host": ["{{base_url}}"],
+              "path": ["billing", "calculate-tariff"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Pedido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    const pedido = pm.response.json();",
+                  "    pm.collectionVariables.set('pedido_id', pedido.id);",
+                  "    console.log('✅ Pedido creado:', pedido.id);",
+                  "    ",
+                  "    pm.test('Pedido creado exitosamente', () => {",
+                  "        pm.expect(pedido).to.have.property('id');",
+                  "        pm.expect(pedido.estado).to.eql('PENDIENTE');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"productoId\": \"PROD-001\",\n      \"cantidad\": 2\n    }\n  ],\n  \"destino\": {\n    \"lat\": -0.180653,\n    \"lng\": -78.467838,\n    \"direccion\": \"Av. 10 de Agosto N35-10 y Villalengua, Quito\",\n    \"referencia\": \"Edificio azul, segundo piso\"\n  },\n  \"tipoEntrega\": \"urbana\",\n  \"zonaId\": \"ZONA-001\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/pedidos",
+              "host": ["{{base_url}}"],
+              "path": ["pedidos"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Pedido",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/pedidos/{{pedido_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["pedidos", "{{pedido_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Estado",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"EN_RUTA\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/pedidos/{{pedido_id}}/estado",
+              "host": ["{{base_url}}"],
+              "path": ["pedidos", "{{pedido_id}}", "estado"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Pedido",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Cliente canceló la orden\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/pedidos/{{pedido_id}}/cancelar",
+              "host": ["{{base_url}}"],
+              "path": ["pedidos", "{{pedido_id}}", "cancelar"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Flota",
+      "item": [
+        {
+          "name": "List Repartidores",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/flota/repartidores?page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["flota", "repartidores"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Repartidores Disponibles",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const data = pm.response.json();",
+                  "    if (data.length > 0) {",
+                  "        pm.collectionVariables.set('repartidor_id', data[0].id);",
+                  "        console.log('✅ Repartidor disponible:', data[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/flota/repartidores/disponibles?zonaId=ZONA-001",
+              "host": ["{{base_url}}"],
+              "path": ["flota", "repartidores", "disponibles"],
+              "query": [
+                {
+                  "key": "zonaId",
+                  "value": "ZONA-001"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Vehiculos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/flota/vehiculos?tipo=motorizado",
+              "host": ["{{base_url}}"],
+              "path": ["flota", "vehiculos"],
+              "query": [
+                {
+                  "key": "tipo",
+                  "value": "motorizado"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Disponibilidad por Zona",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/flota/disponibilidad/zona/ZONA-001",
+              "host": ["{{base_url}}"],
+              "path": ["flota", "disponibilidad", "zona", "ZONA-001"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Asignacion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedidoId\": \"{{pedido_id}}\",\n  \"repartidorId\": \"{{repartidor_id}}\",\n  \"vehiculoId\": \"{{vehiculo_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/flota/asignaciones",
+              "host": ["{{base_url}}"],
+              "path": ["flota", "asignaciones"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Iniciar Ruta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ubicacionActual\": {\n    \"lat\": -0.180653,\n    \"lng\": -78.467838\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/flota/asignaciones/{{pedido_id}}/iniciar",
+              "host": ["{{base_url}}"],
+              "path": ["flota", "asignaciones", "{{pedido_id}}", "iniciar"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Finalizar Entrega",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedidoId\": \"{{pedido_id}}\",\n  \"ubicacionFinal\": {\n    \"lat\": -0.180653,\n    \"lng\": -78.467838\n  },\n  \"fotoEntrega\": \"data:image/jpeg;base64,/9j/4AAQSkZJRg...\",\n  \"notasEntrega\": \"Entregado al cliente. Todo en orden.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/flota/asignaciones/finalizar",
+              "host": ["{{base_url}}"],
+              "path": ["flota", "asignaciones", "finalizar"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Tracking",
+      "item": [
+        {
+          "name": "Update Ubicacion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedidoId\": \"{{pedido_id}}\",\n  \"repartidorId\": \"{{repartidor_id}}\",\n  \"ubicacion\": {\n    \"lat\": -0.178900,\n    \"lng\": -78.468500\n  },\n  \"velocidad\": 35.5,\n  \"heading\": 180\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tracking",
+              "host": ["{{base_url}}"],
+              "path": ["tracking"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Billing",
+      "item": [
+        {
+          "name": "Get Factura by Pedido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const factura = pm.response.json();",
+                  "    pm.collectionVariables.set('factura_id', factura.id);",
+                  "    console.log('✅ Factura encontrada:', factura.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/billing/invoices/order/{{pedido_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["billing", "invoices", "order", "{{pedido_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"monto\": 6.60,\n  \"metodoPago\": \"tarjeta_credito\",\n  \"transaccionId\": \"TXN-123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/billing/invoices/{{factura_id}}/payment",
+              "host": ["{{base_url}}"],
+              "path": ["billing", "invoices", "{{factura_id}}", "payment"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Daily Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/billing/daily-report?date=2026-02-05&zonaId=ZONA-001",
+              "host": ["{{base_url}}"],
+              "path": ["billing", "daily-report"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-02-05"
+                },
+                {
+                  "key": "zonaId",
+                  "value": "ZONA-001"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. Inventory",
+      "item": [
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/inventory/products",
+              "host": ["{{base_url}}"],
+              "path": ["inventory", "products"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check Stock",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/inventory/products/PROD-001/stock",
+              "host": ["{{base_url}}"],
+              "path": ["inventory", "products", "PROD-001", "stock"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "7. GraphQL",
+      "item": [
+        {
+          "name": "Dashboard Supervisor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query DashboardSupervisor($zonaId: ID!) {\n  pedidos(filtro: { zonaId: $zonaId, estado: EN_RUTA }) {\n    id\n    estado\n    createdAt\n    cliente {\n      nombre\n      telefono\n    }\n    destino {\n      direccion\n      lat\n      lng\n    }\n    repartidor {\n      id\n      nombre\n      telefono\n      vehiculo {\n        tipo\n        placa\n        modelo\n      }\n    }\n    tiempoTranscurrido\n    retrasoEstimadoMin\n  }\n  \n  flotaActiva(zonaId: $zonaId) {\n    total\n    disponibles\n    enRuta\n    enMantenimiento\n  }\n  \n  kpiDiario(fecha: \"2026-02-05\", zonaId: $zonaId) {\n    fecha\n    totalPedidos\n    pedidosEntregados\n    pedidosCancelados\n    tasaExito\n    ingresoTotal\n    tiempoPromedioEntrega\n  }\n}",
+                "variables": "{\n  \"zonaId\": \"ZONA-001\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Repartidores Disponibles",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query RepartidoresDisponibles {\n  repartidores(filtro: { estado: DISPONIBLE }) {\n    id\n    nombre\n    telefono\n    estado\n    zona {\n      id\n      nombre\n      cobertura\n    }\n    vehiculo {\n      id\n      tipo\n      placa\n      modelo\n      anio\n      capacidadKg\n      estado\n    }\n    calificacionPromedio\n    totalEntregas\n  }\n}",
+                "variables": ""
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "KPIs Diario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query KPIDiario($fecha: String!, $zonaId: ID) {\n  kpiDiario(fecha: $fecha, zonaId: $zonaId) {\n    fecha\n    totalPedidos\n    pedidosEntregados\n    pedidosCancelados\n    tasaExito\n    ingresoTotal\n    tiempoPromedioEntrega\n  }\n}",
+                "variables": "{\n  \"fecha\": \"2026-02-05\",\n  \"zonaId\": \"ZONA-001\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/graphql",
+              "host": ["{{base_url}}"],
+              "path": ["graphql"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import { Injectable, Scope, Inject } from '@nestjs/common';
-import * as DataLoader from 'dataloader';
+import DataLoader from 'dataloader';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { MICROSERVICES_CLIENTS } from '../../constans';
