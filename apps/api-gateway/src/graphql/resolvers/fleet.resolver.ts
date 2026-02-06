@@ -4,6 +4,9 @@ import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { FlotaActivaType } from '../types';
 import { MICROSERVICES_CLIENTS } from '../../constans';
+import { Roles } from '../../decorators/roles.decorator';
+import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from '../../guards/auth.guard';
 
 @Resolver()
 export class FleetResolver {
@@ -13,6 +16,8 @@ export class FleetResolver {
     ) { }
 
     @Query(() => FlotaActivaType, { name: 'flotaActiva' })
+    @UseGuards(AuthGuard)
+    @Roles('SUPERVISOR', 'GERENTE', 'ADMIN')
     async getFlotaActiva(@Args('zonaId') zonaId: string) {
         // Necesito conteos.
         // Opcion 1: Endpoint especifico en FleetService.

@@ -5,6 +5,9 @@ import { firstValueFrom } from 'rxjs';
 import { PedidoType, RepartidorType, FacturaType } from '../types';
 import { MICROSERVICES_CLIENTS } from '../../constans';
 import { RepartidorLoader } from '../loaders/repartidor.loader';
+import { Roles } from '../../decorators/roles.decorator';
+import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from '../../guards/auth.guard';
 
 @Resolver(() => PedidoType)
 export class PedidosResolver {
@@ -17,6 +20,8 @@ export class PedidosResolver {
     ) { }
 
     @Query(() => [PedidoType], { name: 'pedidos' })
+    @UseGuards(AuthGuard)
+    @Roles('SUPERVISOR', 'GERENTE', 'ADMIN')
     async getPedidos(
         @Args('filtro', { type: () => PedidosFilterInput, nullable: true }) filtro: PedidosFilterInput,
     ) {
@@ -44,6 +49,8 @@ export class PedidosResolver {
     }
 
     @Query(() => PedidoType, { name: 'pedido' })
+    @UseGuards(AuthGuard)
+    @Roles('CLIENTE', 'REPARTIDOR', 'SUPERVISOR', 'GERENTE', 'ADMIN')
     async getPedido(@Args('id') id: string) {
         const pedido = await firstValueFrom(this.pedidosClient.send('get_pedido', id));
         return {

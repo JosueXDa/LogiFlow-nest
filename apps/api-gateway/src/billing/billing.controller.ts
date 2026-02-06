@@ -9,6 +9,7 @@ import {
     Query,
     UseGuards,
 } from '@nestjs/common';
+import { Roles } from '../decorators/roles.decorator';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { MICROSERVICES_CLIENTS } from '../constans';
@@ -23,6 +24,7 @@ export class BillingController {
 
     @Post('calculate-tariff')
     @UseGuards(AuthGuard)
+    @Roles('CLIENTE')
     async calculateTariff(@Body() dto: any) {
         return firstValueFrom(
             this.billingClient.send({ cmd: 'billing.calcular_tarifa' }, dto),
@@ -31,6 +33,7 @@ export class BillingController {
 
     @Post('invoices')
     @UseGuards(AuthGuard)
+    @Roles('GERENTE', 'ADMIN')
     async createInvoiceDraft(@Body() dto: any) {
         return firstValueFrom(
             this.billingClient.send({ cmd: 'billing.crear_factura_borrador' }, dto),
@@ -39,6 +42,7 @@ export class BillingController {
 
     @Get('invoices')
     @UseGuards(AuthGuard)
+    @Roles('GERENTE', 'ADMIN')
     async findAll(@Query() query: any) {
         return firstValueFrom(
             this.billingClient.send({ cmd: 'billing.listar_facturas' }, query),
@@ -47,6 +51,7 @@ export class BillingController {
 
     @Get('invoices/:id')
     @UseGuards(AuthGuard)
+    @Roles('GERENTE', 'ADMIN')
     async findOne(@Param('id') id: string) {
         return firstValueFrom(
             this.billingClient.send({ cmd: 'billing.obtener_factura' }, id),
@@ -55,6 +60,7 @@ export class BillingController {
 
     @Get('invoices/order/:pedidoId')
     @UseGuards(AuthGuard)
+    @Roles('CLIENTE')
     async findByOrder(@Param('pedidoId') pedidoId: string) {
         return firstValueFrom(
             this.billingClient.send(
@@ -66,6 +72,7 @@ export class BillingController {
 
     @Patch('invoices/:id/emit')
     @UseGuards(AuthGuard)
+    @Roles('GERENTE', 'ADMIN')
     async emitInvoice(@Param('id') id: string) {
         return firstValueFrom(
             this.billingClient.send({ cmd: 'billing.emitir_factura' }, id),
@@ -74,6 +81,7 @@ export class BillingController {
 
     @Post('invoices/:id/payment')
     @UseGuards(AuthGuard)
+    @Roles('ADMIN', 'SISTEMA')
     async registerPayment(@Param('id') id: string, @Body() dto: any) {
         return firstValueFrom(
             this.billingClient.send(
@@ -85,6 +93,7 @@ export class BillingController {
 
     @Patch('invoices/:id/cancel')
     @UseGuards(AuthGuard)
+    @Roles('GERENTE', 'ADMIN')
     async cancelInvoice(
         @Param('id') id: string,
         @Body() body: { motivo: string },
@@ -99,6 +108,7 @@ export class BillingController {
 
     @Get('daily-report')
     @UseGuards(AuthGuard)
+    @Roles('SUPERVISOR', 'GERENTE', 'ADMIN')
     async getDailyReport(@Query('date') date: string, @Query('zonaId') zonaId?: string) {
         return firstValueFrom(
             this.billingClient.send(

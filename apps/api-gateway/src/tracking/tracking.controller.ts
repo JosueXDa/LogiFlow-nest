@@ -1,5 +1,6 @@
 import { Controller, Post, Get, Param, Body, Query, UseGuards, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
+import { Roles } from '../decorators/roles.decorator';
 import { firstValueFrom } from 'rxjs';
 import { AuthGuard } from '../guards/auth.guard';
 
@@ -12,6 +13,7 @@ export class TrackingController {
 
     @Post('track')
     @UseGuards(AuthGuard)
+    @Roles('REPARTIDOR')
     async updateLocation(@Body() dto: any) {
         return firstValueFrom(
             this.trackingClient.send({ cmd: 'tracking.actualizar_ubicacion' }, dto),
@@ -20,6 +22,7 @@ export class TrackingController {
 
     @Get('repartidor/:id/ubicacion')
     @UseGuards(AuthGuard)
+    @Roles('CLIENTE', 'SUPERVISOR', 'GERENTE', 'ADMIN')
     async getUltimaUbicacion(@Param('id') id: string) {
         return firstValueFrom(
             this.trackingClient.send(
@@ -31,6 +34,7 @@ export class TrackingController {
 
     @Get('repartidor/:id/historial')
     @UseGuards(AuthGuard)
+    @Roles('SUPERVISOR', 'GERENTE', 'ADMIN')
     async getHistorial(@Param('id') id: string, @Query() query: any) {
         return firstValueFrom(
             this.trackingClient.send(
@@ -42,6 +46,7 @@ export class TrackingController {
 
     @Get('repartidor/:id/ruta-activa')
     @UseGuards(AuthGuard)
+    @Roles('SUPERVISOR', 'GERENTE', 'ADMIN')
     async getRutaActiva(@Param('id') id: string) {
         return firstValueFrom(
             this.trackingClient.send({ cmd: 'tracking.obtener_ruta_activa' }, id),
@@ -50,6 +55,7 @@ export class TrackingController {
 
     @Post('ruta/iniciar')
     @UseGuards(AuthGuard)
+    @Roles('REPARTIDOR')
     async iniciarRuta(@Body() dto: any) {
         return firstValueFrom(
             this.trackingClient.send({ cmd: 'tracking.iniciar_ruta' }, dto),
@@ -58,6 +64,7 @@ export class TrackingController {
 
     @Post('ruta/:id/finalizar')
     @UseGuards(AuthGuard)
+    @Roles('REPARTIDOR')
     async finalizarRuta(@Param('id') id: string) {
         return firstValueFrom(
             this.trackingClient.send({ cmd: 'tracking.finalizar_ruta' }, id),
@@ -66,6 +73,7 @@ export class TrackingController {
 
     @Post('ruta/:id/cancelar')
     @UseGuards(AuthGuard)
+    @Roles('REPARTIDOR')
     async cancelarRuta(@Param('id') id: string) {
         return firstValueFrom(
             this.trackingClient.send({ cmd: 'tracking.cancelar_ruta' }, id),
@@ -74,6 +82,7 @@ export class TrackingController {
 
     @Get('ruta/:id')
     @UseGuards(AuthGuard)
+    @Roles('REPARTIDOR', 'SUPERVISOR', 'GERENTE', 'ADMIN')
     async getRutaById(@Param('id') id: string) {
         return firstValueFrom(
             this.trackingClient.send({ cmd: 'tracking.obtener_ruta' }, id),
