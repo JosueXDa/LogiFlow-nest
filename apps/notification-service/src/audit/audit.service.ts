@@ -36,7 +36,45 @@ export class AuditService implements OnModuleInit {
         }
     }
 
-    async getAllLogs(): Promise<NotificationLog[]> {
-        return this.logRepository.find({ order: { createdAt: 'DESC' }, take: 50 });
+    async getAllLogs(limit: number = 50): Promise<NotificationLog[]> {
+        return this.logRepository.find({ 
+            order: { createdAt: 'DESC' }, 
+            take: limit 
+        });
+    }
+
+    async getLogById(id: string): Promise<NotificationLog | null> {
+        return this.logRepository.findOne({ where: { id } });
+    }
+
+    async getLogsByEvent(eventName: string, limit: number = 50): Promise<NotificationLog[]> {
+        return this.logRepository.find({
+            where: { eventName },
+            order: { createdAt: 'DESC' },
+            take: limit
+        });
+    }
+
+    async getStats() {
+        const total = await this.logRepository.count();
+        
+        const eventCounts = await this.logRepository
+            .createQueryBuilder('log')
+            .select('log.eventName', 'eventName')
+            .addSelect('COUNT(*)', 'count')
+            .groupBy('log.eventName')
+            .orderBy('count', 'DESC')
+            .getRawMany();
+
+        const last24h = await this.logRepository
+            .createQueryBuilder('log')
+            .where('log.createdAt > NOW() - INTERVAL \'24 hours\'')
+            .getCount();
+
+        return {
+            total,
+            last24h,
+            byEvent: eventCounts,
+        };
     }
 }
