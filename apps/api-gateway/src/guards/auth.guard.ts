@@ -17,19 +17,26 @@ export class AuthGuard implements CanActivate {
   ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<Request>();
+    let request: Request;
     
-    // Excluir rutas de autenticación del guard para evitar recursión
-    if (request.path.startsWith('/api/auth')) {
-      return true;
+    // Manejar contextos HTTP y GraphQL
+    if (context.getType() === 'http') {
+      request = context.switchToHttp().getRequest<Request>();
+      
+      // Excluir rutas de autenticación del guard para evitar recursión
+      if (request.path?.startsWith('/api/auth')) {
+        return true;
+      }
+    } else {
+      // Contexto GraphQL
+      const gqlContext = context.getArgByIndex(2);
+      request = gqlContext.req;
     }
 
     const requiredRoles = this.reflector.getAllAndOverride<string[]>(
       ROLES_KEY,
       [context.getHandler(), context.getClass()],
     );
-
-    const authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
 
     try {
       // Intentar obtener el token desde el header Authorization (Bearer token)
@@ -87,6 +94,7 @@ export class AuthGuard implements CanActivate {
       if (error instanceof UnauthorizedException) {
         throw error;
       }
+      console.error('Error en AuthGuard:', error);
       throw new UnauthorizedException('Error al verificar la autenticación');
     }
   }
