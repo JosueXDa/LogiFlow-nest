@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test WebSocket - LogiFlow</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        h2 {
+            color: #34495e;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .btn-connect {
+            background: #3498db;
+            color: white;
+        }
+        .btn-disconnect {
+            background: #e74c3c;
+            color: white;
+        }
+        .btn-subscribe {
+            background: #2ecc71;
+            color: white;
+        }
+        .btn-clear {
+            background: #95a5a6;
+            color: white;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            flex: 1;
+            min-width: 200px;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            align-items: center;
+        }
+        .events {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .event-item {
+            padding: 8px;
+            margin: 5px 0;
+            border-left: 3px solid #3498db;
+            background: #34495e;
+            border-radius: 2px;
+        }
+        .event-item.success {
+            border-left-color: #2ecc71;
+        }
+        .event-item.error {
+            border-left-color: #e74c3c;
+        }
+        .event-item.info {
+            border-left-color: #f39c12;
+        }
+        .timestamp {
+            color: #95a5a6;
+            font-size: 11px;
+        }
+        .event-type {
+            color: #3498db;
+            font-weight: bold;
+        }
+        .event-data {
+            margin-top: 5px;
+            color: #bdc3c7;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔌 Test WebSocket - LogiFlow</h1>
+    
+    <div class="container">
+        <h2>Estado de Conexión</h2>
+        <div id="status" class="status disconnected">
+            ❌ Desconectado
+        </div>
+        
+        <div class="controls">
+            <button class="btn-connect" onclick="connect()">Conectar</button>
+            <button class="btn-disconnect" onclick="disconnect()">Desconectar</button>
+            <button class="btn-clear" onclick="clearEvents()">Limpiar Log</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Suscripciones</h2>
+        
+        <div class="input-group">
+            <label>Pedido ID:</label>
+            <input type="text" id="pedidoId" placeholder="uuid-del-pedido">
+            <button class="btn-subscribe" onclick="subscribeToPedido()">Suscribir a Pedido</button>
+            <button class="btn-disconnect" onclick="unsubscribeFromPedido()">Desuscribir</button>
+        </div>
+
+        <div class="input-group">
+            <label>Zona ID:</label>
+            <input type="text" id="zonaId" placeholder="uuid-de-zona">
+            <button class="btn-subscribe" onclick="subscribeToZona()">Suscribir a Zona</button>
+        </div>
+
+        <div class="input-group">
+            <button class="btn-subscribe" onclick="subscribeToGlobal()">Suscribir a Eventos Globales</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Eventos Recibidos</h2>
+        <div id="events" class="events">
+            <div class="event-item info">
+                <div class="timestamp">[Esperando conexión...]</div>
+                <div>Usa el botón "Conectar" para iniciar la conexión WebSocket</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let socket = null;
+
+        function addEvent(type, eventName, data) {
+            const eventsDiv = document.getElementById('events');
+            const eventDiv = document.createElement('div');
+            eventDiv.className = `event-item ${type}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            eventDiv.innerHTML = `
+                <div class="timestamp">[${timestamp}]</div>
+                <div class="event-type">${eventName}</div>
+                <div class="event-data">${JSON.stringify(data, null, 2)}</div>
+            `;
+            
+            eventsDiv.insertBefore(eventDiv, eventsDiv.firstChild);
+            
+            // Limitar a 50 eventos
+            while (eventsDiv.children.length > 50) {
+                eventsDiv.removeChild(eventsDiv.lastChild);
+            }
+        }
+
+        function updateStatus(connected, message) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${connected ? 'connected' : 'disconnected'}`;
+            statusDiv.textContent = `${connected ? '✅' : '❌'} ${message}`;
+        }
+
+        function connect() {
+            if (socket && socket.connected) {
+                addEvent('info', 'INFO', 'Ya estás conectado');
+                return;
+            }
+
+            addEvent('info', 'CONNECTING', 'Intentando conectar...');
+
+            socket = io('ws://localhost:3009/ws', {
+                withCredentials: true,
+                transports: ['websocket', 'polling']
+            });
+
+            socket.on('connect', () => {
+                addEvent('success', 'CONNECT', { socketId: socket.id });
+                updateStatus(true, 'Conectado');
+            });
+
+            socket.on('disconnect', () => {
+                addEvent('error', 'DISCONNECT', 'Desconectado del servidor');
+                updateStatus(false, 'Desconectado');
+            });
+
+            socket.on('connection:success', (data) => {
+                addEvent('success', 'CONNECTION:SUCCESS', data);
+            });
+
+            socket.on('connection:error', (data) => {
+                addEvent('error', 'CONNECTION:ERROR', data);
+            });
+
+            // Escuchar todos los eventos de pedidos
+            socket.on('pedido:actualizado', (data) => {
+                addEvent('success', '📦 PEDIDO:ACTUALIZADO', data);
+            });
+
+            socket.on('ubicacion:actualizada', (data) => {
+                addEvent('success', '📍 UBICACION:ACTUALIZADA', data);
+            });
+
+            socket.on('conductor:asignado', (data) => {
+                addEvent('success', '🚗 CONDUCTOR:ASIGNADO', data);
+            });
+
+            socket.on('entrega:completada', (data) => {
+                addEvent('success', '✅ ENTREGA:COMPLETADA', data);
+            });
+
+            socket.on('ruta:iniciada', (data) => {
+                addEvent('success', '🚀 RUTA:INICIADA', data);
+            });
+
+            socket.on('ruta:finalizada', (data) => {
+                addEvent('success', '🏁 RUTA:FINALIZADA', data);
+            });
+
+            // Eventos globales
+            socket.on('pedido:creado', (data) => {
+                addEvent('info', '🌐 PEDIDO:CREADO', data);
+            });
+
+            socket.on('factura:emitida', (data) => {
+                addEvent('info', '💰 FACTURA:EMITIDA', data);
+            });
+
+            socket.on('stock:insuficiente', (data) => {
+                addEvent('error', '⚠️ STOCK:INSUFICIENTE', data);
+            });
+
+            socket.on('connect_error', (error) => {
+                addEvent('error', 'CONNECT_ERROR', { message: error.message });
+                updateStatus(false, 'Error de conexión');
+            });
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.close();
+                socket = null;
+                addEvent('info', 'DISCONNECT', 'Desconectado manualmente');
+                updateStatus(false, 'Desconectado');
+            }
+        }
+
+        function subscribeToPedido() {
+            const pedidoId = document.getElementById('pedidoId').value;
+            if (!pedidoId) {
+                alert('Por favor ingresa un ID de pedido');
+                return;
+            }
+            if (!socket || !socket.connected) {
+                alert('Debes conectarte primero');
+                return;
+            }
+            
+            socket.emit('subscribe:pedido', { pedidoId });
+            addEvent('info', 'SUBSCRIBE', { type: 'pedido', pedidoId });
+        }
+
+        function unsubscribeFromPedido() {
+            const pedidoId = document.getElementById('pedidoId').value;
+            if (!pedidoId) {
+                alert('Por favor ingresa un ID de pedido');
+                return;
+            }
+            if (!socket || !socket.connected) {
+                alert('Debes conectarte primero');
+                return;
+            }
+            
+            socket.emit('unsubscribe:pedido', { pedidoId });
+            addEvent('info', 'UNSUBSCRIBE', { type: 'pedido', pedidoId });
+        }
+
+        function subscribeToZona() {
+            const zonaId = document.getElementById('zonaId').value;
+            if (!zonaId) {
+                alert('Por favor ingresa un ID de zona');
+                return;
+            }
+            if (!socket || !socket.connected) {
+                alert('Debes conectarte primero');
+                return;
+            }
+            
+            socket.emit('subscribe:zona', { zonaId });
+            addEvent('info', 'SUBSCRIBE', { type: 'zona', zonaId });
+        }
+
+        function subscribeToGlobal() {
+            if (!socket || !socket.connected) {
+                alert('Debes conectarte primero');
+                return;
+            }
+            
+            socket.emit('subscribe:global');
+            addEvent('info', 'SUBSCRIBE', { type: 'global' });
+        }
+
+        function clearEvents() {
+            document.getElementById('events').innerHTML = '';
+        }
+
+        // Conectar automáticamente al cargar la página
+        // connect();
+    </script>
+</body>
+</html>
