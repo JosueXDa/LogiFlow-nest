@@ -2,6 +2,29 @@ const API_GATEWAY_URL = 'http://localhost:3009';
 
 // Same auth logic
 async function login() {
+    const credentials = {
+        email: 'admin@logiflow.com',
+        password: 'Admin123!',
+        name: 'Admin Sistema',
+        role: 'ADMIN'
+    };
+
+    console.log('📝 Verificando usuario admin...');
+    const responseRegister = await fetch(`${API_GATEWAY_URL}/api/auth/sign-up/email`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Origin': 'http://localhost:3000'
+        },
+        body: JSON.stringify(credentials)
+    });
+
+    if (responseRegister.ok) {
+        console.log('✅ Usuario admin creado.');
+    } else if (responseRegister.status === 409 || responseRegister.status === 400) {
+        console.log('ℹ️  Usuario admin ya existe.');
+    }
+
     console.log('🔑 Iniciando sesión...');
     const responseAuth = await fetch(`${API_GATEWAY_URL}/api/auth/sign-in/email`, {
         method: 'POST',
@@ -10,12 +33,12 @@ async function login() {
             'Origin': 'http://localhost:3000'
         },
         body: JSON.stringify({
-            email: 'abel@test.com',
-            password: 'abell123'
+            email: credentials.email,
+            password: credentials.password
         })
     });
 
-    if (!responseAuth.ok) throw new Error('Login failed');
+    if (!responseAuth.ok) throw new Error('Login failed: ' + await responseAuth.text());
 
     let rawCookies = responseAuth.headers.getSetCookie
         ? responseAuth.headers.getSetCookie().join('; ')

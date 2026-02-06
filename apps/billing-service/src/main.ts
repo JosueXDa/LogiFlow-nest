@@ -13,7 +13,7 @@ async function bootstrap() {
     transport: Transport.TCP,
     options: {
       host: process.env.TCP_HOST || '0.0.0.0',
-      port: 3010,
+      port: parseInt(process.env.TCP_PORT || '4007'),
       retryAttempts: 5,
       retryDelay: 3000,
     },
@@ -54,7 +54,7 @@ async function bootstrap() {
   );
 
   await app.startAllMicroservices();
-  logger.log(`🚀 TCP Microservice listening on port ${process.env.TCP_PORT || 3004}`);
+  logger.log(`🚀 TCP Microservice listening on port ${process.env.TCP_PORT || 4007}`);
   logger.log(`🐰 RabbitMQ connected to billing_queue`);
 }
 

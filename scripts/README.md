@@ -76,6 +76,17 @@ chmod +x scripts/clear-all-databases.sh
 
 ### 🌱 Scripts de Seed (Población de Datos)
 
+**NOTA IMPORTANTE:** Todos los scripts de seed requieren autenticación. Los scripts automáticamente crean un usuario administrador si no existe:
+
+**Credenciales del Admin:**
+- **Email:** `admin@logiflow.com`
+- **Password:** `Admin123!`
+- **Role:** `ADMIN`
+
+Este usuario tiene permisos para crear todos los recursos del sistema (productos, repartidores, vehículos, zonas, etc.).
+
+---
+
 #### `seed-fleet.mjs`
 Puebla la base de datos de Fleet Service con datos de prueba.
 
@@ -86,10 +97,18 @@ node scripts/seed-fleet.mjs
 pnpm seed:fleet
 ```
 
+**Requisitos:**
+- API Gateway corriendo en `localhost:3009`
+- Fleet Service conectado al API Gateway
+- PostgreSQL corriendo
+
 **Crea:**
-- 20 repartidores de diferentes tipos
-- 20 vehículos (motorizados, autos, camiones)
-- 5 zonas de cobertura
+- 1 usuario ADMIN (si no existe)
+- 3 zonas de cobertura (Quito Norte, Quito Sur, Valle de los Chillos)
+- 3 vehículos (motorizados, autos, camiones)
+- 3 repartidores asignados a diferentes zonas
+
+**Nota:** Las zonas se crean primero porque los repartidores requieren una zona válida (foreign key).
 
 ---
 
@@ -103,8 +122,40 @@ node scripts/seed-inventory.mjs
 pnpm seed:inventory
 ```
 
+**Requisitos:**
+- API Gateway corriendo en `localhost:3009`
+- Inventory Service conectado al API Gateway
+- PostgreSQL corriendo
+
 **Crea:**
-- 50 productos variados con stock
+- 1 usuario ADMIN (si no existe)
+- 10 productos variados con stock (laptops, monitores, accesorios, etc.)
+
+---
+
+#### `seed-billing.mjs`
+Puebla la base de datos de Billing Service con tarifas de transporte.
+
+**Uso:**
+```bash
+node scripts/seed-billing.mjs
+# o
+pnpm seed:billing
+```
+
+**Requisitos:**
+- API Gateway corriendo en `localhost:3009`
+- Billing Service conectado al API Gateway
+- PostgreSQL corriendo
+
+**Crea:**
+- 1 usuario ADMIN (si no existe)
+- 3 tarifas:
+  * **Urbana Motorizado**: $2.50 base + $0.50/km
+  * **Urbana Vehículo Liviano**: $5.00 base + $0.80/km
+  * **Intermunicipal Camión**: $50.00 base + $1.20/km + $0.10/kg
+
+**Nota:** Las tarifas son necesarias para calcular costos de envío y generar facturas. Sin tarifas, los cálculos de precios fallarán.
 
 ---
 
@@ -119,6 +170,10 @@ node scripts/simulate-order-flow.mjs
 # o
 pnpm simulate:order
 ```
+
+**Requisitos:**
+- Todos los microservicios corriendo
+- Usuario ADMIN creado (se crea automáticamente si no existe)
 
 **Simula:**
 1. Creación de pedido

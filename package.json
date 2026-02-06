@@ -10,6 +10,7 @@
     "check-types": "turbo run check-types",
     "seed:inventory": "bun scripts/seed-inventory.mjs",
     "seed:fleet": "bun scripts/seed-fleet.mjs",
+    "seed:billing": "bun scripts/seed-billing.mjs",
     "simulate:order": "bun scripts/simulate-order-flow.mjs",
     "db:clear": "node scripts/clear-all-databases.mjs",
     "db:clear:ps": "powershell -ExecutionPolicy Bypass -File scripts/clear-all-databases.ps1"

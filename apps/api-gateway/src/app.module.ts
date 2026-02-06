@@ -16,44 +16,61 @@ import { TrackingController } from './tracking/tracking.controller';
 import { GraphqlModule } from './graphql/graphql.module';
 import { EventsGateway } from './websocket/events.gateway';
 import { WebSocketRelayConsumer } from './websocket/websocket-relay.consumer';
+import { SessionValidatorModule } from './guards/session-validator.module';
 
 @Module({
   imports: [
+    SessionValidatorModule,
     GraphqlModule,
     ClientsModule.register([
       {
         name: MICROSERVICES_CLIENTS.PEDIDOS_SERVICE,
         transport: Transport.TCP,
         options: {
+          host: '127.0.0.1',
           port: 4004,
+          retryAttempts: 5,
+          retryDelay: 3000,
         },
       },
       {
         name: MICROSERVICES_CLIENTS.FLEET_SERVICE,
         transport: Transport.TCP,
         options: {
+          host: '127.0.0.1',
           port: 4005,
+          retryAttempts: 5,
+          retryDelay: 3000,
         },
       },
       {
         name: MICROSERVICES_CLIENTS.INVENTORY_SERVICE,
         transport: Transport.TCP,
         options: {
-          port: 4006,
+          host: '127.0.0.1',
+          port: 3004,
+          retryAttempts: 5,
+          retryDelay: 3000,
         },
       },
       {
         name: MICROSERVICES_CLIENTS.BILLING_SERVICE,
         transport: Transport.TCP,
         options: {
+          host: '127.0.0.1',
           port: 4007,
+          retryAttempts: 5,
+          retryDelay: 3000,
         },
       },
       {
         name: MICROSERVICES_CLIENTS.TRACKING_SERVICE,
         transport: Transport.TCP,
         options: {
+          host: '127.0.0.1',
           port: 4008,
+          retryAttempts: 5,
+          retryDelay: 3000,
         },
       },
     ]),

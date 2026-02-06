@@ -37,6 +37,11 @@ async function bootstrap() {
       queue: 'fleet_events',
       queueOptions: {
         durable: true,
+        arguments: {
+          'x-message-ttl': 86400000, // 24 horas - debe coincidir con Fleet Service
+          'x-dead-letter-exchange': 'dlx.fleet',
+          'x-dead-letter-routing-key': 'fleet.failed',
+        },
       },
     },
   });

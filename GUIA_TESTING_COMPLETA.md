@@ -1,6 +1,18 @@
 # Guía Completa de Testing - LogiFlow
 
-## 📋 Índice
+## � ACTUALIZACIÓN IMPORTANTE - Control de Roles Implementado
+
+**Cambio reciente:** El sistema ahora tiene **control de acceso por roles** en todos los endpoints. Cada usuario necesita el rol correcto para acceder a recursos específicos.
+
+**Roles disponibles:** `CLIENTE`, `REPARTIDOR`, `SUPERVISOR`, `GERENTE`, `ADMIN`
+
+👉 **Para ver el impacto en tus pruebas de Postman, consulta: [GUIA_TESTING_CON_ROLES.md](GUIA_TESTING_CON_ROLES.md)**
+
+Esta guía sigue siendo válida para endpoints y payloads. La nueva guía complementa con información sobre qué rol necesitas para cada endpoint.
+
+---
+
+## �📋 Índice
 1. [Configuración Initial](#1-configuración-inicial)
 2. [Flujo de Autenticación](#2-flujo-de-autenticación)
 3. [Flujo Completo de Pedido (Happy Path)](#3-flujo-completo-de-pedido-happy-path)
@@ -168,14 +180,22 @@ Este flujo demuestra el ciclo de vida completo de un pedido según los requerimi
 **Ejecutar scripts de seed:**
 ```powershell
 # Desde la raíz del proyecto
-node scripts/seed-fleet.mjs       # Crea repartidores y vehículos
-node scripts/seed-inventory.mjs   # Crea productos en inventario
+node scripts/seed-fleet.mjs       # Crea admin y repartidores/vehículos
+node scripts/seed-inventory.mjs   # Crea admin y productos en inventario
 ```
+
+**NOTA IMPORTANTE:** Los scripts automáticamente crean un usuario ADMIN:
+- **Email:** `admin@logiflow.com`
+- **Password:** `Admin123!`
+- **Role:** `ADMIN` (permisos para crear recursos del sistema)
 
 **VERIFICACIÓN:**
 ```http
 GET http://localhost:3009/flota/repartidores/disponibles
+Authorization: Bearer {{token_admin}}
+
 GET http://localhost:3009/inventory/products
+Authorization: Bearer {{token_admin}}
 ```
 
 ---
@@ -878,6 +898,7 @@ socket.on('connection:error', (error) => {
 | **BillingService**: Cálculo de tarifas y facturas | ✅ | `/billing/calculate-tariff`, `/billing/invoices` |
 | **API Gateway**: Enrutamiento centralizado | ✅ | Puerto 3009, todos los endpoints bajo `/api/*` |
 | **Validación JWT**: En todas las rutas protegidas | ✅ | `AuthGuard` aplicado globalmente |
+| **Control de Acceso por Roles**: @Roles decorador | ✅ | Implementado en 60+ endpoints (CLIENTE, REPARTIDOR, SUPERVISOR, GERENTE, ADMIN) |
 | **Rate Limiting**: 100 req/min por cliente | ⚠️ | **PENDIENTE** - Falta implementar `@nestjs/throttler` |
 | **Transacciones ACID**: En operaciones de escritura | ✅ | `@Transactional` en servicios críticos |
 | **Documentación OpenAPI 3.0**: Swagger UI | ⚠️ | **PENDIENTE** - Falta configurar `/swagger-ui` |
@@ -903,8 +924,8 @@ socket.on('connection:error', (error) => {
 
 ### 📊 Resumen de Estado
 
-**FASE 1**: 87.5% Completo
-- ✅ 7/8 requisitos implementados
+**FASE 1**: 90% Completo
+- ✅ 9/10 requisitos implementados (incluyendo control de roles)
 - ⚠️ Falta: Rate Limiting, OpenAPI/Swagger
 
 **FASE 2**: 77.8% Completo
