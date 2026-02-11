@@ -26,7 +26,14 @@ export class BillingController {
     @MessagePattern({ cmd: 'billing.calcular_tarifa' })
     async calcularTarifa(@Payload() dto: CalcularTarifaDto) {
         try {
-            this.logger.log(`Calculando tarifa: ${JSON.stringify(dto)}`);
+            this.logger.log(`===== INICIO CALCULAR TARIFA =====`);
+            this.logger.log(`DTO Recibido: ${JSON.stringify(dto)}`);
+            this.logger.log(`tipoEntrega: ${dto.tipoEntrega} (type: ${typeof dto.tipoEntrega})`);
+            this.logger.log(`tipoVehiculo: ${dto.tipoVehiculo} (type: ${typeof dto.tipoVehiculo})`);
+            this.logger.log(`distanciaKm: ${dto.distanciaKm}`);
+            this.logger.log(`pesoKg: ${dto.pesoKg}`);
+            this.logger.log(`===== FIN LOG DTO =====`);
+
             const resultado = await this.tariffCalculator.calcularTarifa(dto);
             return { success: true, data: resultado };
         } catch (error) {

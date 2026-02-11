@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Get,
   Inject,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -11,6 +13,7 @@ import {
   ApiOperation,
   ApiBody,
   ApiParam,
+  ApiQuery,
   ApiResponse,
   ApiBearerAuth,
   ApiCookieAuth,
@@ -46,6 +49,35 @@ export class AsignacionController {
       this.fleetServiceClient.send(
         { cmd: 'fleet.asignacion.asignar' },
         asignarRepartidorDto,
+      ),
+    );
+  }
+
+  @Get()
+  @UseGuards(AuthGuard)
+  @Roles('SUPERVISOR', 'GERENTE', 'ADMIN')
+  @ApiOperation({ summary: 'Listar asignaciones', description: 'Obtiene lista paginada de asignaciones con filtros' })
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
+  @ApiQuery({ name: 'pedidoId', required: false, description: 'Filtrar por pedido (UUID)' })
+  @ApiQuery({ name: 'repartidorId', required: false, description: 'Filtrar por repartidor (UUID)' })
+  @ApiQuery({ name: 'estado', required: false, description: 'Filtrar por estado' })
+  @ApiResponse({ status: 200, description: 'Lista de asignaciones' })
+  async findAll(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+    @Query('pedidoId') pedidoId?: string,
+    @Query('repartidorId') repartidorId?: string,
+    @Query('estado') estado?: string,
+  ) {
+    return firstValueFrom(
+      this.fleetServiceClient.send(
+        { cmd: 'fleet.asignacion.findAll' },
+        {
+          filters: { pedidoId, repartidorId, estado },
+          page,
+          limit,
+        },
       ),
     );
   }

@@ -1,26 +1,38 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TipoEntrega, TipoVehiculo, EstadoFactura, TipoPago } from '../enums';
+import { IsEnum, IsNumber, IsBoolean, IsOptional, IsUUID, Min, Max } from 'class-validator';
 
 // ==========================================
 // CALCULAR TARIFA
 // ==========================================
 export class CalcularTarifaDto {
     @ApiProperty({ enum: TipoEntrega, example: TipoEntrega.URBANA })
+    @IsEnum(TipoEntrega)
     tipoEntrega: TipoEntrega;
 
     @ApiProperty({ enum: TipoVehiculo, example: TipoVehiculo.MOTORIZADO })
+    @IsEnum(TipoVehiculo)
     tipoVehiculo: TipoVehiculo;
 
     @ApiProperty({ example: 5.5, description: 'Distancia en kilómetros' })
+    @IsNumber()
+    @Min(0)
+    @Max(10000)
     distanciaKm: number;
 
     @ApiProperty({ example: 10, description: 'Peso en kilogramos' })
+    @IsNumber()
+    @Min(0)
+    @Max(50000)
     pesoKg: number;
 
     @ApiProperty({ example: false, description: 'Si es entrega urgente' })
+    @IsBoolean()
     esUrgente: boolean;
 
     @ApiPropertyOptional({ example: '550e8400-e29b-41d4-a716-446655440000', description: 'ID de la zona' })
+    @IsOptional()
+    @IsUUID()
     zonaId?: string;
 }
 

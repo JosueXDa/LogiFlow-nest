@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  namespace: logiflow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+    spec:
+      containers:
+      - name: notification-service
+        image: logiflow/notification-service:v2
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3005
+          name: http
+        env:
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: logiflow-config
+              key: NOTIFICATION_SERVICE_PORT
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: logiflow-config
+              key: NODE_ENV
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: logiflow-config
+              key: NOTIFICATION_DATABASE_URL
+        - name: RABBITMQ_URL
+          valueFrom:
+            configMapKeyRef:
+              name: logiflow-config
+              key: RABBITMQ_URL
+        - name: RABBITMQ_USER
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-secret
+              key: RABBITMQ_DEFAULT_USER
+        - name: RABBITMQ_PASS
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-secret
+              key: RABBITMQ_DEFAULT_PASS
+        - name: MAILJET_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: mailjet-secret
+              key: MAILJET_API_KEY
+        - name: MAILJET_API_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: mailjet-secret
+              key: MAILJET_API_SECRET
+        - name: MAILJET_SENDER_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: mailjet-secret
+              key: MAILJET_SENDER_EMAIL
+        - name: MAILJET_SENDER_NAME
+          valueFrom:
+            secretKeyRef:
+              name: mailjet-secret
+              key: MAILJET_SENDER_NAME
+        resources:
+          requests:
+            memory: "100Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+  namespace: logiflow
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3005
+    targetPort: 3005
+    protocol: TCP
+    name: http
+  selector:
+    app: notification-service

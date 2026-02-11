@@ -11,13 +11,13 @@ async function bootstrap() {
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.TCP,
     options: {
-      host: '127.0.0.1',
-      port: 4006,
+      host: process.env.TCP_HOST || '0.0.0.0',
+      port: parseInt(process.env.TCP_PORT || '4006'),
       retryAttempts: 5,
       retryDelay: 3000,
     },
   });
-  logger.log('🔌 TCP Microservice listening on 127.0.0.1:4006');
+  logger.log(`🔌 TCP Microservice listening on ${process.env.TCP_HOST || '0.0.0.0'}:${process.env.TCP_PORT || '4006'}`);
 
   // RabbitMQ para eventos
   app.connectMicroservice<MicroserviceOptions>({

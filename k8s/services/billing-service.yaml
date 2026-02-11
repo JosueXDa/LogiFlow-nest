@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: billing-service
+  namespace: logiflow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: billing-service
+  template:
+    metadata:
+      labels:
+        app: billing-service
+    spec:
+      containers:
+      - name: billing-service
+        image: logiflow/billing-service:v2
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3006
+          name: tcp
+        env:
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: logiflow-config
+              key: BILLING_SERVICE_PORT
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: logiflow-config
+              key: NODE_ENV
+        - name: TCP_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: logiflow-config
+              key: TCP_HOST
+        - name: TCP_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: logiflow-config
+              key: BILLING_TCP_PORT
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: logiflow-config
+              key: BILLING_DATABASE_URL
+        - name: RABBITMQ_URL
+          valueFrom:
+            configMapKeyRef:
+              name: logiflow-config
+              key: RABBITMQ_URL
+        - name: RABBITMQ_USER
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-secret
+              key: RABBITMQ_DEFAULT_USER
+        - name: RABBITMQ_PASS
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-secret
+              key: RABBITMQ_DEFAULT_PASS
+        resources:
+          requests:
+            memory: "100Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: billing-service
+  namespace: logiflow
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3006
+    targetPort: 3006
+    protocol: TCP
+    name: http
+  - port: 4007
+    targetPort: 4007
+    protocol: TCP
+    name: tcp
+  selector:
+    app: billing-service

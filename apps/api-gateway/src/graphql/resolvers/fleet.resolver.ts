@@ -54,17 +54,22 @@ export class RepartidorResolver {
     }
 
     // Resolver Field para Vehiculo (usa DataLoader)
+    // Resolver Field para Vehiculo (usa DataLoader)
     @ResolveField(() => VehiculoType, { nullable: true })
     async vehiculo(@Parent() repartidor: any) {
-        if (!repartidor.vehiculoId) return null;
-        return this.vehiculoLoader.batchVehiculos.load(repartidor.vehiculoId);
+        // Si el servicio ya cargó la relación (como en findAll), devuélvela directamente
+        if (repartidor.vehiculo) return repartidor.vehiculo;
+        // Si no, usa el DataLoader si existe el ID (nota: vehiculoId puede no existir en la entidad si no se definió explícitamente)
+        if (repartidor.vehiculoId) return this.vehiculoLoader.batchVehiculos.load(repartidor.vehiculoId);
+        return null;
     }
 
     // Resolver Field para Zona (usa DataLoader)
     @ResolveField(() => ZonaType, { nullable: true })
     async zona(@Parent() repartidor: any) {
-        if (!repartidor.zonaId) return null;
-        return this.zonaLoader.batchZonas.load(repartidor.zonaId);
+        if (repartidor.zona) return repartidor.zona;
+        if (repartidor.zonaId) return this.zonaLoader.batchZonas.load(repartidor.zonaId);
+        return null;
     }
 }
 

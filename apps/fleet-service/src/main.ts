@@ -11,8 +11,8 @@ async function bootstrap() {
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.TCP,
     options: {
-      host: process.env.FLEET_HOST || '0.0.0.0',
-      port: parseInt(process.env.FLEET_PORT ?? '4005'),
+      host: process.env.TCP_HOST || '0.0.0.0',
+      port: parseInt(process.env.TCP_PORT ?? '4005'),
     },
   });
 

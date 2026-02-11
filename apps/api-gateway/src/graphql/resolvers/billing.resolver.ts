@@ -22,14 +22,26 @@ export class BillingResolver {
         @Args('fecha') fecha: string,
         @Args('zonaId', { nullable: true }) zonaId?: string
     ) {
-        // pattern: billing.reporte_diario
-        const res = await firstValueFrom(this.billingClient.send({ cmd: 'billing.reporte_diario' }, { fecha, zonaId }));
+        try {
+            // pattern: billing.reporte_diario
+            const res = await firstValueFrom(this.billingClient.send({ cmd: 'billing.reporte_diario' }, { fecha, zonaId }));
 
-        if (res.success) {
-            return res.data;
-            // Espera: { totalPedidos, costoPromedioEntrega, tasaCumplimiento, ingresosTotales }
-            // Si BillingService no devuelve exactamente esto, habria que adaptar.
+            if (res && res.success && res.data && res.data.resumen) {
+                const resumen = res.data.resumen;
+                const totalPedidos = resumen.cantidadTotal ?? 0;
+                const totalFacturado = resumen.totalFacturado ?? 0;
+
+                return {
+                    totalPedidos: totalPedidos,
+                    costoPromedioEntrega: totalPedidos > 0 ? (totalFacturado / totalPedidos) : 0,
+                    tasaCumplimiento: totalPedidos > 0 ? ((resumen.cantidadPagada + resumen.cantidadEmitida) / totalPedidos) * 100 : 0,
+                    ingresosTotales: totalFacturado
+                };
+            }
+        } catch (e) {
+            console.error('Error getting KPI:', e);
         }
+
         return {
             totalPedidos: 0,
             costoPromedioEntrega: 0,
