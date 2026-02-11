@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-services
+  namespace: microservices-study
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-services
+  template:
+    metadata:
+      labels:
+        app: auth-services
+    spec:
+      containers:
+        - name: auth-services
+          image: auth-services:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3001
+            - containerPort: 4003
+          env:
+            - name: DB_HOST
+              value: "postgres-auth"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USERNAME
+              value: "postgres"
+            - name: DB_PASSWORD
+              value: "postgres"
+            - name: DB_NAME
+              value: "auth_db"
+            - name: PORT
+              value: "3001"
+            - name: RABBITMQ_URL
+              value: "amqp://admin:admin@rabbitmq:5672"
+            - name: AUTH_SERVICE_URL
+              value: "http://localhost:3001"
+            - name: FRONTEND_URL
+              value: "http://api.local" # Adjust based on ingress
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-services
+  namespace: microservices-study
+spec:
+  selector:
+    app: auth-services
+  ports:
+    - protocol: TCP
+      port: 3001
+      targetPort: 3001
+      name: http
+    - protocol: TCP
+      port: 4003
+      targetPort: 4003
+      name: tcp

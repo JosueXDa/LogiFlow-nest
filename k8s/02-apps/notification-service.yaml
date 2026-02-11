@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  namespace: microservices-study
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+    spec:
+      containers:
+        - name: notification-service
+          image: notification-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3004
+          env:
+            - name: PORT
+              value: "3004"
+            - name: RABBITMQ_URL
+              value: "amqp://admin:admin@rabbitmq:5672"
+            - name: DATABASE_URL
+              value: "postgres://postgres:postgres@postgres-notification:5432/notification_db"
+            - name: MAILJET_API_KEY
+              value: "c7ae23f384a7066d2617ebc19d5bb1ad"
+            - name: MAILJET_API_SECRET
+              value: "2a2714c65ede7d89ddbd8101b6c9cf39"
+            - name: MAILJET_SENDER_EMAIL
+              value: "josuelsoy12@gmail.com"
+            - name: MAILJET_SENDER_NAME
+              value: "LogiFlow"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+  namespace: microservices-study
+spec:
+  selector:
+    app: notification-service
+  ports:
+    - protocol: TCP
+      port: 3004
+      targetPort: 3004

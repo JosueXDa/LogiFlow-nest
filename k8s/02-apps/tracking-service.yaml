@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tracking-service
+  namespace: microservices-study
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tracking-service
+  template:
+    metadata:
+      labels:
+        app: tracking-service
+    spec:
+      containers:
+        - name: tracking-service
+          image: tracking-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 4008
+          env:
+            - name: TCP_HOST
+              value: "0.0.0.0"
+            - name: TCP_PORT
+              value: "4008"
+            - name: RABBITMQ_URL
+              value: "amqp://admin:admin@rabbitmq:5672"
+            - name: DB_HOST
+              value: "postgres-tracking"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: "postgres"
+            - name: DB_PASSWORD
+              value: "postgres"
+            - name: DB_NAME
+              value: "tracking_db"
+            - name: NODE_ENV
+              value: "development"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tracking-service
+  namespace: microservices-study
+spec:
+  selector:
+    app: tracking-service
+  ports:
+    - protocol: TCP
+      port: 4008
+      targetPort: 4008
