@@ -2,18 +2,28 @@ import { betterAuth } from 'better-auth';
 import { Pool } from 'pg';
 
 // Configuración de la conexión a PostgreSQL
-const pool = new Pool({
-  host: process.env.DB_HOST ?? 'localhost',
-  port: Number(process.env.DB_PORT ?? 5432),
-  user: process.env.DB_USERNAME ?? 'postgres',
-  password: process.env.DB_PASSWORD ?? 'postgres',
-  database: process.env.DB_NAME ?? 'auth_db',
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000, // Aumentado a 10 segundos
-  // Agregar configuración de query timeout
-  query_timeout: 10000,
-});
+// Priorizar DATABASE_URL (Kubernetes) sobre variables individuales (desarrollo local)
+const databaseUrl = process.env.DATABASE_URL;
+
+const pool = databaseUrl
+  ? new Pool({
+    connectionString: databaseUrl,
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
+    query_timeout: 10000,
+  })
+  : new Pool({
+    host: process.env.DB_HOST ?? 'localhost',
+    port: Number(process.env.DB_PORT ?? 5432),
+    user: process.env.DB_USERNAME ?? 'postgres',
+    password: process.env.DB_PASSWORD ?? 'postgres',
+    database: process.env.DB_NAME ?? 'auth_db',
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
+    query_timeout: 10000,
+  });
 
 // Manejar errores de conexión del pool
 pool.on('error', (err) => {

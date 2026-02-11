@@ -1,25 +1,41 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsNotEmpty, IsOptional, IsNumber, Min } from 'class-validator';
 
 // ==========================================
 // CREATE PRODUCT
 // ==========================================
 export class CreateProductDto {
     @ApiProperty({ example: 'SKU-001', description: 'Código único del producto' })
+    @IsString()
+    @IsNotEmpty()
     sku: string;
 
     @ApiProperty({ example: 'Laptop Dell XPS 15' })
+    @IsString()
+    @IsNotEmpty()
     nombre: string;
 
     @ApiPropertyOptional({ example: 'Laptop de alto rendimiento con procesador Intel Core i7' })
+    @IsString()
+    @IsOptional()
     descripcion?: string;
 
     @ApiProperty({ example: 1299.99, minimum: 0 })
+    @IsNumber()
+    @IsNotEmpty()
+    @Min(0)
     precio: number;
 
     @ApiProperty({ example: 2.5, minimum: 0, description: 'Peso en kg' })
+    @IsNumber()
+    @IsNotEmpty()
+    @Min(0)
     pesoKg: number;
 
     @ApiProperty({ example: 100, minimum: 0, description: 'Stock inicial' })
+    @IsNumber()
+    @IsNotEmpty()
+    @Min(0)
     stockTotal: number;
 }
 

@@ -27,6 +27,24 @@ export class AsignacionController {
         }
     }
 
+    @MessagePattern({ cmd: 'fleet.asignacion.findAll' })
+    async findAll(@Payload() payload: { filters?: any; page?: number; limit?: number }) {
+        try {
+            const result = await this.asignacionService.findAll(
+                payload.filters || {},
+                payload.page || 1,
+                payload.limit || 10,
+            );
+            return { success: true, data: result };
+        } catch (error) {
+            throw new RpcException({
+                success: false,
+                message: error.message,
+                statusCode: error.status || 400,
+            });
+        }
+    }
+
     @MessagePattern({ cmd: 'fleet.asignacion.iniciar' })
     async iniciar(@Payload() data: { id: string }) {
         try {

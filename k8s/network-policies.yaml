@@ -1,0 +1,238 @@
+# NetworkPolicies para seguridad adicional (Opcional)
+# Requiere un plugin CNI que soporte NetworkPolicies (Calico, Cilium, etc.)
+#
+# Estas políticas restringen el tráfico entre pods siguiendo el principio de menor privilegio
+#
+# Para aplicar:
+# kubectl apply -f network-policies.yaml
+
+---
+# Política por defecto: denegar todo el tráfico entrante
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: logiflow
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+
+---
+# API Gateway puede recibir tráfico desde fuera y comunicarse con todos los servicios
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-gateway-policy
+  namespace: logiflow
+spec:
+  podSelector:
+    matchLabels:
+      app: api-gateway
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 3009
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: auth-service
+    ports:
+    - protocol: TCP
+      port: 3001
+  - to:
+    - podSelector:
+        matchLabels:
+          app: pedidos-service
+    ports:
+    - protocol: TCP
+      port: 3002
+  - to:
+    - podSelector:
+        matchLabels:
+          app: fleet-service
+    ports:
+    - protocol: TCP
+      port: 3003
+  - to:
+    - podSelector:
+        matchLabels:
+          app: inventory-service
+    ports:
+    - protocol: TCP
+      port: 3004
+  - to:
+    - podSelector:
+        matchLabels:
+          app: billing-service
+    ports:
+    - protocol: TCP
+      port: 3006
+  - to:
+    - podSelector:
+        matchLabels:
+          app: tracking-service
+    ports:
+    - protocol: TCP
+      port: 3007
+  - to:
+    - podSelector:
+        matchLabels:
+          app: rabbitmq
+    ports:
+    - protocol: TCP
+      port: 5672
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres-auth
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Permitir DNS
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+
+---
+# Microservicios solo reciben tráfico del API Gateway y pueden acceder a sus BDs y RabbitMQ
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: microservices-policy
+  namespace: logiflow
+spec:
+  podSelector:
+    matchExpressions:
+    - key: app
+      operator: In
+      values:
+      - auth-service
+      - pedidos-service
+      - fleet-service
+      - inventory-service
+      - billing-service
+      - tracking-service
+      - notification-service
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: api-gateway
+  egress:
+  # Acceso a bases de datos
+  - to:
+    - podSelector:
+        matchExpressions:
+        - key: app
+          operator: In
+          values:
+          - postgres-auth
+          - postgres-pedidos
+          - postgres-fleet
+          - postgres-inventory
+          - postgres-billing
+          - postgres-tracking
+          - postgres-notification
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Acceso a RabbitMQ
+  - to:
+    - podSelector:
+        matchLabels:
+          app: rabbitmq
+    ports:
+    - protocol: TCP
+      port: 5672
+  # Permitir DNS
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+  # Permitir tráfico HTTPS para APIs externas (Mailjet, etc.)
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443
+
+---
+# RabbitMQ acepta tráfico de microservicios y acceso al management
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rabbitmq-policy
+  namespace: logiflow
+spec:
+  podSelector:
+    matchLabels:
+      app: rabbitmq
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # AMQP desde microservicios
+  - from:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 5672
+  # Management UI desde cualquier lugar (cambiar en producción)
+  - ports:
+    - protocol: TCP
+      port: 15672
+  egress:
+  # Permitir DNS
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+
+---
+# PostgreSQL solo acepta conexiones de sus microservicios correspondientes
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres-policy
+  namespace: logiflow
+spec:
+  podSelector:
+    matchExpressions:
+    - key: app
+      operator: In
+      values:
+      - postgres-auth
+      - postgres-pedidos
+      - postgres-fleet
+      - postgres-inventory
+      - postgres-billing
+      - postgres-tracking
+      - postgres-notification
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 5432

@@ -42,19 +42,15 @@ export class PedidosResolver {
             estado: filtro?.estado
         };
 
-        // Si el filtro de zona es requerido y no esta en pedidos-service,
-        // post-filtro aqui seria necesario si pedidos-service devuelve todo.
-        // Pero asumimos que pedidos-service maneja el filtro.
-
         const pedidos = await firstValueFrom(this.pedidosClient.send(pattern, payload));
 
-        // Mapping manual si es necesario, pero PedidoType coincide mucho con la entidad
+        // Mapping manual
         return pedidos.map(p => ({
             ...p,
-            cliente: { nombre: 'Cliente Mock' }, // Pedido Service guarda clienteId, necesito nombre. Mock por ahora o llamar AuthService.
-            destino: p.direccionDestino || p.destino, // Normalizar nombres
-            // id, estado ya vienen
-            createdAt: p.createdAt // Para calculo de tiempo
+            cliente: { nombre: 'Cliente Mock' },
+            origen: p.direccionOrigen,
+            destino: p.direccionDestino,
+            createdAt: p.createdAt
         }));
     }
 
@@ -66,7 +62,8 @@ export class PedidosResolver {
         return {
             ...pedido,
             cliente: { nombre: 'Cliente Mock' },
-            destino: pedido.direccionDestino || pedido.destino,
+            origen: pedido.direccionOrigen,
+            destino: pedido.direccionDestino,
         };
     }
 
@@ -92,15 +89,11 @@ export class PedidosResolver {
 
     @ResolveField(() => Int)
     retrasoMin(@Parent() pedido: any) {
-        // Logica simple: Si tiempoTranscurrido > 45 mins (ejemplo), es retraso.
-        // O usar un campo estimado de la DB.
-        // Asumiremos 0 por defecto si no hay estimatedDeliveryTime
         return 0;
     }
 
     @ResolveField(() => FacturaType, { nullable: true })
     async factura(@Parent() pedido: any) {
-        // pattern: billing.obtener_factura_por_pedido
         try {
             const res = await firstValueFrom(this.billingClient.send({ cmd: 'billing.obtener_factura_por_pedido' }, pedido.id));
             if (res && res.success) return res.data;

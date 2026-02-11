@@ -1,0 +1,79 @@
+# Ingress para API Gateway (Opcional)
+# Requiere un Ingress Controller instalado (nginx, traefik, etc.)
+# 
+# Para habilitar, primero instala nginx-ingress:
+# kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.0/deploy/static/provider/cloud/deploy.yaml
+# 
+# Luego aplica este archivo:
+# kubectl apply -f ingress.yaml
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: logiflow-ingress
+  namespace: logiflow
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    # Para CORS (si es necesario)
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: api.logiflow.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: api-gateway
+            port:
+              number: 3009
+  - host: rabbitmq.logiflow.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: rabbitmq-management
+            port:
+              number: 15672
+---
+# Para usar en producción con TLS/HTTPS, descomenta esto:
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   name: logiflow-tls
+#   namespace: logiflow
+# type: kubernetes.io/tls
+# data:
+#   tls.crt: <base64-encoded-cert>
+#   tls.key: <base64-encoded-key>
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: logiflow-ingress-tls
+#   namespace: logiflow
+#   annotations:
+#     cert-manager.io/cluster-issuer: "letsencrypt-prod"
+# spec:
+#   ingressClassName: nginx
+#   tls:
+#   - hosts:
+#     - api.logiflow.com
+#     secretName: logiflow-tls
+#   rules:
+#   - host: api.logiflow.com
+#     http:
+#       paths:
+#       - path: /
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: api-gateway
+#             port:
+#               number: 3009

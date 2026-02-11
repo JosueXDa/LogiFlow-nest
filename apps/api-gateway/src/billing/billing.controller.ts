@@ -42,6 +42,12 @@ export class BillingController {
     @ApiResponse({ status: 200, description: 'Tarifa calculada exitosamente' })
     @ApiResponse({ status: 400, description: 'Datos de entrada inválidos' })
     async calculateTariff(@Body() dto: CalcularTarifaDto) {
+        console.log('===== API GATEWAY: ENVIANDO A BILLING =====');
+        console.log('DTO:', JSON.stringify(dto));
+        console.log('tipoEntrega:', dto.tipoEntrega);
+        console.log('tipoVehiculo:', dto.tipoVehiculo);
+        console.log('===========================================');
+
         return firstValueFrom(
             this.billingClient.send({ cmd: 'billing.calcular_tarifa' }, dto),
         );

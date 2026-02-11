@@ -44,7 +44,7 @@ export class AsignacionService {
         const repartidores = await this.repartidorService.findDisponiblesPorZona(dto.zonaId);
 
         this.logger.log(`📋 Encontrados ${repartidores.length} repartidores disponibles`);
-        
+
         if (repartidores.length === 0) {
             throw new RpcException('No hay repartidores disponibles en la zona');
         }
@@ -121,5 +121,37 @@ export class AsignacionService {
         // this.eventPublisher.publishAsignacionCompleted(...) 
 
         return saved;
+    }
+
+    async findAll(filters: any, page: number = 1, limit: number = 10) {
+        const skip = (page - 1) * limit;
+        const where: any = {};
+
+        // Aplicar filtros
+        if (filters.pedidoId) {
+            where.pedidoId = filters.pedidoId;
+        }
+        if (filters.repartidorId) {
+            where.repartidorId = filters.repartidorId;
+        }
+        if (filters.estado) {
+            where.estado = filters.estado;
+        }
+
+        const [data, total] = await this.asignacionRepository.findAndCount({
+            where,
+            relations: ['repartidor', 'repartidor.vehiculo'],
+            take: limit,
+            skip,
+            order: { fechaAsignacion: 'DESC' },
+        });
+
+        return {
+            data,
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+        };
     }
 }

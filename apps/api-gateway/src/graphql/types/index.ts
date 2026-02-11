@@ -2,6 +2,18 @@ import { Field, ObjectType, ID, Float, Int } from '@nestjs/graphql';
 
 // ====== ZONA ======
 @ObjectType()
+export class DireccionType {
+    @Field(() => Float)
+    lat: number;
+
+    @Field(() => Float)
+    lng: number;
+
+    @Field()
+    direccion: string;
+}
+
+@ObjectType()
 export class ZonaType {
     @Field(() => ID)
     id: string;
@@ -131,8 +143,11 @@ export class PedidoType {
     @Field(() => ClienteType)
     cliente: ClienteType;
 
-    @Field()
-    destino: string;
+    @Field(() => DireccionType)
+    origen: DireccionType;
+
+    @Field(() => DireccionType)
+    destino: DireccionType;
 
     @Field()
     estado: string;

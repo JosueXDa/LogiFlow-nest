@@ -22,17 +22,32 @@ import { ZonaLoader } from './loaders/zona.loader';
             {
                 name: MICROSERVICES_CLIENTS.PEDIDOS_SERVICE,
                 transport: Transport.TCP,
-                options: { port: 4004 },
+                options: {
+                    host: process.env.PEDIDOS_SERVICE_HOST || '127.0.0.1',
+                    port: parseInt(process.env.PEDIDOS_TCP_PORT || '4004'),
+                    retryAttempts: 5,
+                    retryDelay: 3000,
+                },
             },
             {
                 name: MICROSERVICES_CLIENTS.FLEET_SERVICE,
                 transport: Transport.TCP,
-                options: { port: 4005 },
+                options: {
+                    host: process.env.FLEET_SERVICE_HOST || '127.0.0.1',
+                    port: parseInt(process.env.FLEET_TCP_PORT || '4005'),
+                    retryAttempts: 5,
+                    retryDelay: 3000,
+                },
             },
             {
                 name: MICROSERVICES_CLIENTS.BILLING_SERVICE,
                 transport: Transport.TCP,
-                options: { port: 4007 },
+                options: {
+                    host: process.env.BILLING_SERVICE_HOST || '127.0.0.1',
+                    port: parseInt(process.env.BILLING_TCP_PORT || '4007'),
+                    retryAttempts: 5,
+                    retryDelay: 3000,
+                },
             },
         ]),
     ],

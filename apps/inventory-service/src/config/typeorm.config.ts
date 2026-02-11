@@ -8,6 +8,19 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
   constructor(private configService: ConfigService) {}
 
   createTypeOrmOptions(): TypeOrmModuleOptions {
+    // Usar DATABASE_URL si está disponible (Kubernetes), sino variables individuales (desarrollo)
+    const databaseUrl = this.configService.get<string>('DATABASE_URL');
+    
+    if (databaseUrl) {
+      return {
+        type: 'postgres',
+        url: databaseUrl,
+        entities: [Producto, ReservaStock],
+        synchronize: this.configService.get<boolean>('DB_SYNC', true),
+        logging: this.configService.get<boolean>('DB_LOGGING', false),
+      };
+    }
+    
     return {
       type: 'postgres',
       host: this.configService.get<string>('DB_HOST', 'localhost'),
